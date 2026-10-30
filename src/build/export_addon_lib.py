@@ -1,4 +1,4 @@
-"""把装备库导出成插件能读的 Lua 表。
+"""把装备库导出成插件能读的数据。
 
 为什么要这一步：插件能算「我有的装备之间谁更好」，但**规划**要的是
 「我还没有的装备值不值得去刷」。后者需要一份完整装备库，而客户端里
@@ -16,12 +16,28 @@ Lua 版，同样 25 行采样表）。
 的 334 不是一个体系，横着比会得出「装等低的装备属性更差」这种废话。
 统一装等后，比的就只剩属性配比——而配比才是规划真正要回答的问题。
 
-── 体积 ────────────────────────────────────────────────
-3572 件装备，导出后约 400KB 源码。看着不小，但 WoW 插件这个量级很常见
-（背包管理类插件动辄几 MB），加载耗时在毫秒级。
+── 为什么不用 Lua table 字面量 ───────────────────────────
+第一版是每个物品一个表构造式：
+
+    [158366] = {"充能沙石指环",59,3,"finger",11,{[7]=7889,[32]=10000},1},
+
+3572 件写出来 462KB。其中真正有信息量的只有 id、名字、装等、两条属性，
+剩下全是 `[32]=`、`},`、`{"` 这类语法噪音，以及被重复写了几千遍的
+掉落来源字符串（实际只有 99 个唯一值）。
+
+现在改成一行一件的紧凑文本 + 两张去重索引表：
+
+    158366|充能沙石指环|59|3|finger|11|7:7889,32:10000,49:7500|1||12|
+
+模块体积从 462KB 降到约 100KB，加载时 split 一遍即可，耗时在毫秒级。
+
+── 只导本赛季 ────────────────────────────────────────────
+默认只导 is_current=1 的（约 1357 件）。旧赛季的装备刷不到了，留在列表里
+只会干扰判断；而且它们占全库 62%。要全量加参数 --all。
 
 用法：
-    python src/build/export_addon_lib.py
+    python src/build/export_addon_lib.py          # 只导本赛季
+    python src/build/export_addon_lib.py --all    # 全量（约 3570 件）
 """
 
 import io
@@ -81,8 +97,10 @@ def normalize_primary(alloc):
     return out
 
 
-def lua_escape(s):
-    return (s or "").replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+def clean(s):
+    """字段里不能出现分隔符和换行，否则整行解析错位。"""
+    s = (s or "").replace("\n", " ").replace("\r", " ").replace("|", "丨")
+    return s.replace(",", "，")
 
 
 def load_curve():
@@ -101,10 +119,30 @@ def load_curve():
     return header, rows
 
 
+class Pool:
+    """去重索引表：同一个字符串只存一次，条目里存下标。"""
+
+    def __init__(self):
+        self.items = []
+        self.index = {}
+
+    def add(self, value):
+        if not value:
+            return 0
+        hit = self.index.get(value)
+        if hit is None:
+            self.items.append(value)
+            hit = len(self.items)          # 1-based，0 表示"没有"
+            self.index[value] = hit
+        return hit
+
+
 def main():
     if not os.path.exists(DB):
         print(f"找不到 {DB}")
         return 1
+
+    include_all = "--all" in sys.argv
 
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
@@ -130,12 +168,20 @@ def main():
             else:
                 sources[r["item_id"]] = inst or enc
 
-    items, spec_restrict, kept = [], {}, set()
+    sql = """SELECT id, name, name_cn, quality, slot, raw_ilevel, specs,
+                    inventory_type, is_current
+             FROM items {} ORDER BY id"""
+    if not include_all:
+        sql = sql.format("WHERE is_current = 1")
+    else:
+        sql = sql.format("")
+
+    rows, kept = [], set()
+    src_pool, spec_pool = Pool(), Pool()
     opt_count = 0
     skipped = 0
-    for r in conn.execute("""SELECT id, name, name_cn, quality, slot, raw_ilevel, specs,
-                                    inventory_type, is_current
-                             FROM items ORDER BY id"""):
+
+    for r in conn.execute(sql):
         item_id = r["id"]
         slot = SLOT_MAP.get(r["slot"] or "")
         st = stats.get(item_id)
@@ -143,10 +189,8 @@ def main():
             skipped += 1
             continue
 
-        name = r["name_cn"] or r["name"] or str(item_id)
-        # 槽位用短码省体积："main_hand" 出现 700 次，省下来是几十 KB
-        # inventory_type 单独留着：判断"这把武器是不是双手"要靠它，
-        # 槽位名只能区分主手/副手，区分不了一只手还是两只手
+        name = clean(r["name_cn"] or r["name"] or str(item_id))
+
         # 自选属性槽（24/25）先摘出来。
         #
         # 这两个 stat_id 是"由玩家选"的占位，本身不对应任何具体属性。
@@ -163,26 +207,28 @@ def main():
         if slot != "trinket":
             st = normalize_primary(st)
 
-        parts = [f'"{lua_escape(name)}"', str(r["raw_ilevel"] or 0),
-                 str(r["quality"] or 1), f'"{slot}"', str(r["inventory_type"] or 0)]
-        stat_str = ",".join(f"[{k}]={v}" for k, v in sorted(st.items()))
-        parts.append("{" + stat_str + "}")
-        # 本赛季能拿到的标 1。库里混着好几个赛季的东西，旧赛季的已经刷不到了，
-        # 按统一装等折算后属性看着一样，不标出来玩家会去刷一件根本不存在的东西
-        parts.append("1" if r["is_current"] else "0")
-        # 第 8 位：自选属性总量。Lua 侧按偏好折算成具体属性
-        if opt_total:
-            parts.append(str(opt_total))
-        items.append(f"[{item_id}] = {{{','.join(parts)}}},")
-        kept.add(item_id)
+        # 属性写成 "statID:权重" 逗号分隔，比 [32]=10000 省一半字符
+        stat_str = ",".join(f"{k}:{v}" for k, v in sorted(st.items()))
 
+        spec_idx = 0
         if r["specs"]:
             try:
                 spec_list = json.loads(r["specs"])
             except (TypeError, ValueError):
                 spec_list = []
             if spec_list:
-                spec_restrict[item_id] = spec_list
+                spec_idx = spec_pool.add(tuple(spec_list))
+
+        src_idx = src_pool.add(sources.get(item_id, ""))
+
+        # 字段：id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制
+        rows.append("|".join([
+            str(item_id), name, str(r["raw_ilevel"] or 0), str(r["quality"] or 1),
+            slot, str(r["inventory_type"] or 0), stat_str,
+            "1" if r["is_current"] else "0",
+            str(opt_total or ""), str(src_idx), str(spec_idx),
+        ]))
+        kept.add(item_id)
 
     # ── 写文件 ───────────────────────────────────────────
     out = []
@@ -191,38 +237,46 @@ def main():
     out.append("")
     out.append("    由 src/build/export_addon_lib.py 从 data/wowgear.db 导出。")
     out.append("    换赛季要重新导：python src/build/export_addon_lib.py")
+    out.append("    要导全部赛季（默认只导本赛季）：加参数 --all")
     out.append("")
-    out.append("    格式：[itemID] = { 名字, 基础装等, 品质, 槽位, 物品类型, {[statID]=分配权重}, 是否本赛季 [, 自选属性总量] }")
+    out.append("    ── 为什么不是一张 Lua 表 ───────────────────────────")
+    out.append("    [158366] = {\"名字\",59,3,\"finger\",11,{[32]=10000},1},")
+    out.append("    这种写法看着直观，但 3572 件就是 462KB，其中大半是")
+    out.append("    [32]= / }, / { 这类语法噪音，以及被重复几千遍的掉落来源")
+    out.append("    （实际只有 99 个唯一值）。改成一行一件的紧凑文本 +")
+    out.append("    两张去重索引表后约 100KB，Curve.lua 加载时解析一遍。")
     out.append("")
-    out.append("    **存的是分配权重（万分比），不是属性数值**。真实数值 =")
-    out.append("    权重 × 装等系数 × 1e-4，系数由 Curve.lua 按装等插值给出。")
-    out.append("    存权重而不是存数值，是为了让候选装备能按任意装等重算——")
-    out.append("    库里各赛季的基础装等是混的（59/108/197/298），")
-    out.append("    直接拿各自身装等比会得出「装等低的就是差」这种废话。")
+    out.append("    ── 字段 ───────────────────────────────────────────")
+    out.append("    id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制")
+    out.append("")
+    out.append("    属性写成 statID:权重，逗号分隔。**存的是分配权重（万分比），")
+    out.append("    不是属性数值**：真实数值 = 权重 × 装等系数 × 1e-4，系数由")
+    out.append("    Curve.lua 按装等插值给出。存权重而不存数值，是为了让候选")
+    out.append("    装备能按任意装等重算——库里各赛季的基础装等是混的")
+    out.append("    （59/108/197/298），各按各的比只会得出「装等低的就是差」。")
+    out.append("")
+    out.append("    来源和专精限制存的是下面两张索引表的下标，0 表示没有。")
     out.append("]]")
     out.append("")
     out.append("local ADDON, NS = ...")
     out.append("")
-    out.append(f"-- 共 {len(items)} 件")
-    out.append("NS.LIB = {")
-    out.extend("  " + line for line in items)
+    out.append(f"-- 共 {len(rows)} 件")
+    out.append("NS.LIB_RAW = [==[")
+    out.extend(rows)
+    out.append("]==]")
+    out.append("")
+
+    out.append("-- 掉落来源（去重）：副本名 · boss 名")
+    out.append("NS.LIB_SRC_LIST = {")
+    for v in src_pool.items:
+        out.append(f'  "{v.replace(chr(34), chr(39))}",')
     out.append("}")
     out.append("")
 
-    # 掉落来源
-    out.append("-- 掉落来源：副本名 · boss 名")
-    out.append("NS.LIB_SRC = {")
-    src_lines = [f'  [{k}] = "{lua_escape(v)}",'
-                 for k, v in sorted(sources.items()) if k in kept]
-    out.extend(src_lines)
-    out.append("}")
-    out.append("")
-
-    # 专精限制：只有少数装备有，单开一张表比每条都带个空字段省
-    out.append("-- 专精限制：只有这些装备限定了能吃它的专精，其余全部通用")
-    out.append("NS.LIB_SPEC = {")
-    for k, v in sorted(spec_restrict.items()):
-        out.append(f"  [{k}] = {{{','.join(str(s) for s in v)}}},")
+    out.append("-- 专精限制（去重）：允许吃这件装备的专精 ID 列表")
+    out.append("NS.LIB_SPEC_LIST = {")
+    for v in spec_pool.items:
+        out.append("  {" + ",".join(str(s) for s in v) + "},")
     out.append("}")
     out.append("")
 
@@ -248,11 +302,14 @@ def main():
 
     size = len(text.encode("utf-8"))
     print(f"写出 {OUT}")
-    print(f"  装备 {len(items)} 件（跳过 {skipped} 件：槽位不认识或没有属性）")
-    print(f"  有掉落来源 {len(src_lines)} 件")
-    print(f"  有专精限制 {len(spec_restrict)} 件")
+    print(f"  装备 {len(rows)} 件（跳过 {skipped} 件：槽位不认识或没有属性）"
+          f"{'，含全部赛季' if include_all else '，仅本赛季'}")
+    with_src = sum(1 for r in rows if r.split("|")[-2] != "0")
+    print(f"  掉落来源 {with_src} 件，去重后 {len(src_pool.items)} 条")
+    print(f"  专精限制去重后 {len(spec_pool.items)} 组")
     print(f"  带自选属性槽 {opt_count} 件")
-    print(f"  曲线 {len(curve_rows)} 档装等")
+    out_lines = text.count("\n")
+    print(f"  曲线 {len(curve_rows)} 档装等，共 {out_lines} 行")
     print(f"  体积 {size / 1024:.0f} KB")
     return 0
 

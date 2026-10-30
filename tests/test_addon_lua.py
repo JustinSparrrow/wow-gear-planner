@@ -378,7 +378,11 @@ def main():
     import sqlite3, json as _json
     conn = sqlite3.connect(os.path.join(ROOT, "data", "wowgear.db"))
     locked = None
-    for iid, sp in conn.execute("SELECT id, specs FROM items WHERE specs IS NOT NULL LIMIT 400"):
+    # 只导本赛季，所以这里也必须限定 is_current=1，
+    # 否则可能挑到一件库里根本没有的旧赛季装备，测的就不是"限制生效"了
+    for iid, sp in conn.execute(
+            "SELECT id, specs FROM items WHERE specs IS NOT NULL "
+            "AND is_current = 1 LIMIT 400"):
         try:
             lst = _json.loads(sp)
         except Exception:

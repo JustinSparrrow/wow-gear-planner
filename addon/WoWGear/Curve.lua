@@ -27,6 +27,69 @@
 
 local ADDON, NS = ...
 
+-- ── 解析 Lib.lua 的紧凑数据 ──────────────────────────────
+--[[
+    Lib.lua 里是一行一件的紧凑文本（见那边的文件头说明），这里是解析层。
+    解析完的结构跟第一版 Lua 表完全一致，所以下面所有取数代码没改过：
+
+      NS.LIB[id] = { 名字, 基础装等, 品质, 槽位, 物品类型,
+                     {[statID]=权重}, 是否本赛季, 自选属性总量 }
+
+    为什么要解析而不是直接把表写进 Lib.lua：那样每个物品都是
+    `[158366] = {"名字",59,3,"finger",11,{[32]=10000},1},`，
+    3572 件写出来 462KB，其中大半是语法噪音和被重复几千遍的掉落来源
+    （实际只有 99 个唯一值）。紧凑文本 + 去重索引约 100KB。
+
+    解析是加载时一次性的：1355 行 × 11 字段，毫秒级。
+    懒解析反而更慢——搜索要遍历全部物品，到时候还是得全解一遍，
+    只是把开销从"进游戏时一次"摊到"每次敲键盘"。
+]]
+do
+  local raw = NS.LIB_RAW or ""
+  local srcList = NS.LIB_SRC_LIST or {}
+  local specList = NS.LIB_SPEC_LIST or {}
+
+  NS.LIB, NS.LIB_SRC, NS.LIB_SPEC = {}, {}, {}
+
+  local n = 0
+  for line in raw:gmatch("[^\n]+") do
+    -- 按 | 切字段。末尾补一个分隔符再反复吞，这样最后一段不会丢
+    local f = {}
+    for cell in (line .. "|"):gmatch("([^|]*)|") do f[#f + 1] = cell end
+
+    if #f >= 8 then
+      local st = {}
+      for pair in f[7]:gmatch("[^,]+") do
+        local k, v = pair:match("(%d+):(%d+)")
+        if k then st[tonumber(k)] = tonumber(v) end
+      end
+
+      local id = tonumber(f[1])
+      if id then
+        NS.LIB[id] = {
+          f[2],                          -- 名字
+          tonumber(f[3]) or 0,           -- 基础装等
+          tonumber(f[4]) or 1,           -- 品质
+          f[5],                          -- 槽位
+          tonumber(f[6]) or 0,           -- 物品类型
+          st,                            -- 权重
+          f[8] == "1",                   -- 本赛季
+          tonumber(f[9]),                -- 自选属性总量（可能为空）
+        }
+
+        local si = tonumber(f[10])
+        if si and si > 0 then NS.LIB_SRC[id] = srcList[si] end
+        local pi = tonumber(f[11])
+        if pi and pi > 0 then NS.LIB_SPEC[id] = specList[pi] end
+
+        n = n + 1
+      end
+    end
+  end
+
+  NS.LIB_COUNT = n
+end
+
 local Lib = {}
 NS.Lib = Lib
 
@@ -226,7 +289,10 @@ function Lib.build(itemID, ilvl, primary)
     hasOpt = (raw[8] or 0) > 0,     -- 这件有自选属性槽，配比是猜的
     -- 名字不能叫 current：Gear.candidates 里 item.current 是"身上那件"，
     -- 撞名字会让库里所有本赛季装备在列表里显示成"当前"
-    curSeason = raw[7] == 1,
+    -- 解析出来的是 boolean，不是 1/0。用 0 表示"否"会踩 Lua 的
+    -- "0 也是真"这个坑——`if not item.curSeason` 永远不成立，
+    -- 旧赛季装备就再也不会被标出来
+    curSeason = raw[7] == true,
     source = NS.LIB_SRC[itemID],
   }
 end
@@ -243,7 +309,7 @@ end
 
 -- ── 按部位建索引 ─────────────────────────────────────────
 --[[
-    3570 件全表遍历一次要几毫秒，而且每次敲键盘都会触发一次搜索。
+    1355 件全表遍历一次要几毫秒，而且每次敲键盘都会触发一次搜索。
     预先按槽位分桶之后，搜"头部"只需遍历那一百多件，快一个数量级。
 
     pairs 遍历只做一次（首次搜索时懒建），代价可以忽略。
