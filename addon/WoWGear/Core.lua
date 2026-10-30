@@ -108,6 +108,21 @@ local function selfCheck()
     if sample then
       print(string.format("  例如「%s」itemID=%s —— 已退回用装备库的权重换算",
         tostring(sample.name), tostring(sample.id)))
+      -- 把原始属性表原样打出来。key 长什么样只有看到才知道怎么兼容，
+      -- 与其猜"可能是什么枚举"，不如让用户截一行图。
+      local raw = sample.rawStats
+      if type(raw) == "table" then
+        local parts, cnt = {}, 0
+        for k, v in pairs(raw) do
+          cnt = cnt + 1
+          if cnt <= 8 then
+            parts[#parts + 1] = tostring(k) .. "=" .. tostring(v)
+          end
+        end
+        print(string.format("  原始属性表 %d 项：%s", cnt, table.concat(parts, ", ")))
+      else
+        print("  原始属性表: " .. tostring(raw))
+      end
     end
     print("  如果换算出来的数字明显不对，把上面两行发给我。")
   end

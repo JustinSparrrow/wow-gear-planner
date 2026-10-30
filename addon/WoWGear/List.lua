@@ -270,6 +270,10 @@ local function fillRow(r, item, snap, slotKey, sim)
       end
     end
     if #mix > 0 then subParts[#subParts + 1] = table.concat(mix, " ") end
+    if item.hasOpt then
+      -- 配比是插件猜的（默认暴击+精通），标出来别让人当成实物数据
+      subParts[#subParts + 1] = "|cffd4b478自选|r"
+    end
     if not item.curSeason then
       subParts[#subParts + 1] = "|cff666666旧|r"
     end

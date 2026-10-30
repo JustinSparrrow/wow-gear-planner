@@ -124,13 +124,47 @@ function NS.Item.readStats(link, id)
   for _, fn in ipairs(attempts) do
     local ok, raw = pcall(fn)
     if ok and type(raw) == "table" and next(raw) ~= nil then
-      NS.Item.statsPath = table.concat(tried, "+") or "first"
+      NS.Item.statsPath = (#tried == 0) and "ok" or table.concat(tried, "+")
       return raw
     end
     tried[#tried + 1] = ok and "empty" or "err"
   end
   NS.Item.statsPath = "FAIL:" .. table.concat(tried, ",")
   return nil
+end
+
+--[[
+    属性表的 key 可能是三种东西，全都要认：
+
+      数字       32                     —— 正常的 ITEM_MOD_CRIT_RATING
+      常量名字符串 "ITEM_MOD_CRIT_RATING" —— 某些版本直接给名字
+      属性名      "Crit" / "CriticalStrike"
+
+    **这次就是栽在这里**：GetItemStats 返回了表，但 key 一个都没命中，
+    stats 保持空 → 所有差值恒为 0 → 面板纹丝不动。而且它不报错，
+    自检打出来的括号里也是空的，因为 table.concat(空表) 是空字符串，
+    不是 nil。（"拿到了表但一个 key 都不认识"这种情况下要单独标出来。）
+]]
+local MOD_BY_NAME = {
+  agility = 3, strength = 4, intellect = 5, stamina = 7,
+  crit = 32, criticalstrike = 32, critrating = 32,
+  haste = 36, hasterating = 36,
+  mastery = 49, masteryrating = 49,
+  versatility = 40,
+  speed = 61, leech = 62, lifesteal = 62, avoidance = 63,
+}
+
+function NS.Item.modID(k)
+  if type(k) == "number" then return k end
+  if type(k) ~= "string" then return k end
+
+  -- "ITEM_MOD_CRIT_RATING" -> 客户端常量
+  local v = _G[k]
+  if type(v) == "number" then return v end
+
+  -- "Crit" / "Critical Strike" 这类名字
+  local norm = k:lower():gsub("[^%a]", "")
+  return MOD_BY_NAME[norm] or k
 end
 
 function NS.Item.get(linkOrID)
@@ -162,6 +196,7 @@ function NS.Item.get(linkOrID)
   local raw = NS.Item.readStats(itemLink or linkOrID, id)
   if raw then
     for modID, value in pairs(raw) do
+      modID = NS.Item.modID(modID)
       local code = NS.MOD[modID]
       if code then
         stats[code] = (stats[code] or 0) + value
@@ -176,11 +211,16 @@ function NS.Item.get(linkOrID)
     end
   end
 
+  if raw and next(stats) == nil then
+    NS.Item.statsPath = "unmapped(" .. tostring(raw[1] and "array" or "?") .. ")"
+  end
+
   local info = {
     id = id, link = itemLink or linkOrID, name = name,
     ilvl = ilvl or 0, quality = quality or 1,
     icon = icon, equipLoc = equipLoc, stats = stats,
   }
+  info.rawStats = raw
   NS.Item.cache[key] = info
   return info
 end

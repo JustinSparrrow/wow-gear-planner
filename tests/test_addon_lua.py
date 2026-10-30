@@ -504,6 +504,44 @@ def main():
       NS.Item.clear()
     """)
 
+    # ── 16. 属性表 key 的兼容 + 自选槽 ──────────────
+    print()
+    print("─" * 62)
+    print("16. 属性表 key 不认识 / 自选属性槽")
+    print("─" * 62)
+
+    # 线上故障的第二种形态：GetItemStats **返回了表**，但 key 不是数字常量，
+    # 一个都没命中 → stats 仍为空 → 差值恒 0。而且它不报错。
+    lua.execute("""
+      C_Item.GetItemStats = function(x)
+        local d = ITEM_DB[x]
+        if not d then return nil end
+        return { ITEM_MOD_STAMINA = 1000, ITEM_MOD_CRIT_RATING = 200, ["Haste"] = 50 }
+      end
+      NS.Item.clear()
+      _link16 = mkItem(999001, 334, {[7] = 1}, "INVTYPE_HEAD", "KeyTest")
+      _i16 = NS.Item.get(_link16)
+    """)
+    check_eq("常量名 key 认得（stamina）", lua.eval("_i16.stats.sta"), 1000)
+    check_eq("常量名 key 认得（crit）", lua.eval("_i16.stats.crit"), 200)
+    check_eq("属性名 key 认得（Haste）", lua.eval("_i16.stats.haste"), 50)
+
+    # 自选属性槽（24/25）：以前被当未知 id 过滤，导致这批装备在库里没有绿字
+    lua.execute("""
+      C_Item.GetItemStats = function(x)
+        local d = ITEM_DB[x]
+        return d and d.stats or nil
+      end
+      NS.Item.clear()
+    """)
+    opt = lua.eval("NS.Lib.statsFor(244582, 334, 'agi')")
+    print(f"  带自选槽的腿铠按 334 折算: agi={opt['agi']} sta={opt['sta']} "
+          f"crit={opt['crit']} mastery={opt['mastery']}")
+    check_eq("自选槽折出了绿字（以前是 0）",
+             (opt["crit"] or 0) + (opt["mastery"] or 0) > 0, True)
+    check_eq("自选槽标记得上", bool(lua.eval(
+        "NS.Lib.build(244582, 334, 'agi').hasOpt")), True)
+
     # ── 汇总 ────────────────────────────────────────────
     print()
     print("=" * 62)

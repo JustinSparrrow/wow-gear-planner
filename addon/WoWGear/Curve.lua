@@ -165,6 +165,14 @@ function Lib.statsFor(itemID, ilvl, primary)
     end
   end
 
+  -- 自选属性槽：库里只存总量（第 8 位），按默认偏好折成具体属性
+  local optTotal = raw[8]
+  if optTotal and optTotal > 0 then
+    for code, share in pairs(NS.OPT_SPLIT) do
+      out[code] = (out[code] or 0) + optTotal * share * f.sec * 1e-4
+    end
+  end
+
   for k, v in pairs(out) do out[k] = NS.round(v) end
   return out
 end
@@ -215,6 +223,7 @@ function Lib.build(itemID, ilvl, primary)
     icon = icon,
     stats = Lib.statsFor(itemID, ilvl, primary),
     fromLib = true,
+    hasOpt = (raw[8] or 0) > 0,     -- 这件有自选属性槽，配比是猜的
     -- 名字不能叫 current：Gear.candidates 里 item.current 是"身上那件"，
     -- 撞名字会让库里所有本赛季装备在列表里显示成"当前"
     curSeason = raw[7] == 1,

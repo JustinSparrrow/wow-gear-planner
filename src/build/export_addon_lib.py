@@ -45,8 +45,12 @@ SLOT_MAP = {
     "ranged": "main_hand",
 }
 
-# 只保留能算出属性的 stat_id（24/25 自选槽、61 加速 这些不要）
-KEEP_STATS = {3, 4, 5, 7, 32, 36, 40, 49, 71, 72, 73, 74}
+# 读进来要参与计算的 stat_id。
+#
+# 24/25 是"自选属性"占位槽（制造业、PVP 装备），本身不对应具体属性，
+# 但它们的**总量**必须留着——只在后面的循环里摘出来单独存，
+# 不能在读取阶段就丢掉，否则这批装备在库里会完全没有绿字。
+KEEP_STATS = {3, 4, 5, 7, 24, 25, 32, 36, 40, 49, 71, 72, 73, 74}
 
 
 # 主属性权重的标准值。
@@ -127,6 +131,7 @@ def main():
                 sources[r["item_id"]] = inst or enc
 
     items, spec_restrict, kept = [], {}, set()
+    opt_count = 0
     skipped = 0
     for r in conn.execute("""SELECT id, name, name_cn, quality, slot, raw_ilevel, specs,
                                     inventory_type, is_current
@@ -142,6 +147,17 @@ def main():
         # 槽位用短码省体积："main_hand" 出现 700 次，省下来是几十 KB
         # inventory_type 单独留着：判断"这把武器是不是双手"要靠它，
         # 槽位名只能区分主手/副手，区分不了一只手还是两只手
+        # 自选属性槽（24/25）先摘出来。
+        #
+        # 这两个 stat_id 是"由玩家选"的占位，本身不对应任何具体属性。
+        # 之前直接当未知 id 过滤掉了，后果是**一批当前赛季装备在库里完全没有绿字**
+        # （比如 244582 远行者的加固腿铠：主属性+耐力+两个自选槽，
+        # 过滤后只剩主属性，兜底算出来比实际弱一大截）。
+        opt_total = sum(v for k, v in st.items() if k in (24, 25))
+        st = {k: v for k, v in st.items() if k not in (24, 25)}
+        if opt_total:
+            opt_count += 1
+
         # 饰品不归一化：它的属性结构本来就不规则（有的给主属性、有的给绿字、
         # 有的什么都没有全靠触发），强行统一会把差异抹平
         if slot != "trinket":
@@ -154,6 +170,9 @@ def main():
         # 本赛季能拿到的标 1。库里混着好几个赛季的东西，旧赛季的已经刷不到了，
         # 按统一装等折算后属性看着一样，不标出来玩家会去刷一件根本不存在的东西
         parts.append("1" if r["is_current"] else "0")
+        # 第 8 位：自选属性总量。Lua 侧按偏好折算成具体属性
+        if opt_total:
+            parts.append(str(opt_total))
         items.append(f"[{item_id}] = {{{','.join(parts)}}},")
         kept.add(item_id)
 
@@ -173,7 +192,7 @@ def main():
     out.append("    由 src/build/export_addon_lib.py 从 data/wowgear.db 导出。")
     out.append("    换赛季要重新导：python src/build/export_addon_lib.py")
     out.append("")
-    out.append("    格式：[itemID] = { 名字, 基础装等, 品质, 槽位, 物品类型, {[statID]=分配权重}, 是否本赛季 }")
+    out.append("    格式：[itemID] = { 名字, 基础装等, 品质, 槽位, 物品类型, {[statID]=分配权重}, 是否本赛季 [, 自选属性总量] }")
     out.append("")
     out.append("    **存的是分配权重（万分比），不是属性数值**。真实数值 =")
     out.append("    权重 × 装等系数 × 1e-4，系数由 Curve.lua 按装等插值给出。")
@@ -232,6 +251,7 @@ def main():
     print(f"  装备 {len(items)} 件（跳过 {skipped} 件：槽位不认识或没有属性）")
     print(f"  有掉落来源 {len(src_lines)} 件")
     print(f"  有专精限制 {len(spec_restrict)} 件")
+    print(f"  带自选属性槽 {opt_count} 件")
     print(f"  曲线 {len(curve_rows)} 档装等")
     print(f"  体积 {size / 1024:.0f} KB")
     return 0
