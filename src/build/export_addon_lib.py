@@ -41,10 +41,15 @@ Lua 版，同样 25 行采样表）。
 """
 
 import io
+import datetime
 import json
 import os
 import sqlite3
 import sys
+
+# 生成时间戳。写进 Lib.lua 头部，让文件自己能报身份——
+# 排查"改名了但还是旧数据"这类问题时，肉眼看文件是看不出来的。
+BUILD_TIME = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB = os.path.join(ROOT, "data", "wowgear.db")
@@ -343,6 +348,13 @@ def main():
     out.append("local ADDON, NS = ...")
     out.append("")
     out.append(f"-- 共 {len(rows)} 件")
+    # 构建指纹：让 Lib.lua 自己报身份。
+    # 界面上万一出现库里没有的装备，`/wgdump` 打出来的这行能立刻
+    # 判断是"装错了版本"还是"代码读错了"。
+    head_n = sum(1 for line in rows if line.split("|")[4] == "head")
+    out.append(f'NS.LIB_BUILD = "{len(rows)} 件 / 头部 {head_n} / 生成于 {BUILD_TIME}"')
+    out.append("")
+
     out.append("NS.LIB_RAW = [==[")
     out.extend(rows)
     out.append("]==]")

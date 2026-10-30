@@ -848,6 +848,58 @@ def main():
     check_eq("客户端实值不叠加宝石", lua.eval("_clientCrit"), 100)
     check_eq("库值叠加宝石", int(lua.eval("_libHaste")), 13)
 
+    # ── 21. /wgdump 现场导出 + "列表里不能有库里没有的东西" ──
+    print()
+    print("─" * 62)
+    print("21. /wgdump 能跑；装备库列表里每一条都必须真的在库里")
+    print("─" * 62)
+    # 线上出现的怪现象：装备库模式下头部列出了「雷什裹布 170 装等」，
+    # 而 Lib.lua 里根本没有这件（grep 不到）。没有 /wgdump 就无法判断
+    # 是"数据装错版本"还是"列表画错了"。
+    build = lua.eval("NS.LIB_BUILD")
+    print(f"  数据指纹: {build}")
+    check_eq("Lib.lua 带构建指纹", bool(build) and "件" in str(build), True)
+
+    lua.execute("""
+      NS.UI.mode = "lib"
+      NS.UI.keyword = ""
+      NS.UI.selected = "head"
+      NS.UI.libCache = nil
+      NS.UI:Refresh()
+    """)
+    # 直接把 BuildCandidates 的结果逐条核对
+    lua.execute("""
+      _chk = {}
+      local list = NS.UI:BuildCandidates(NS.SLOT_BY_KEY["head"], NS.Gear.bags())
+      for i, it in ipairs(list) do
+        _chk[#_chk + 1] = { id = it.id, name = it.name,
+                            inLib = (it.id and NS.LIB[it.id] ~= nil) and true or false,
+                            isCur = it.current or false }
+      end
+    """)
+    n_bad = 0
+    n_cur = 0
+    for i in range(1, len(lua.eval("_chk")) + 1):
+        row = lua.eval(f"_chk[{i}]")
+        if row["isCur"]:
+            n_cur += 1
+            continue
+        if not row["inLib"]:
+            n_bad += 1
+            print(f"  [异常] {row['name']} id={row['id']} 不在库里")
+    print(f"  列表共 {len(lua.eval('_chk'))} 条，其中当前装备 {n_cur} 条，"
+          f"库内 {len(lua.eval('_chk')) - n_cur - n_bad} 条，异常 {n_bad} 条")
+    check_eq("列表里没有库里不存在的装备", n_bad, 0)
+
+    # /wgdump 必须能跑通（真实环境里它要读 GetAddOnMetadata、遍历列表）
+    lua.execute("""
+      GetAddOnMetadata = function() return "1.1.0" end
+      _dumpOk = pcall(SlashCmdList["WOWGEARDUMP"])
+    """)
+    check_eq("/wgdump 不报错", bool(lua.eval("_dumpOk")), True)
+
+    lua.execute("NS.UI.mode = 'bag' NS.UI.keyword = '' NS.UI.libCache = nil NS.UI:Refresh()")
+
     # ── 汇总 ────────────────────────────────────────────
     print()
     print("=" * 62)

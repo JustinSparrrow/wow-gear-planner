@@ -143,3 +143,53 @@ SlashCmdList["WOWGEARDEBUG"] = function()
   NS.Item.clear()
   selfCheck()
 end
+
+--[[
+    /wgdump —— 把「插件现在到底在用什么」一次性打出来。
+
+    为什么需要这条命令：
+
+    排查这几轮的时候，最有价值的线索全来自"实际值"，而我每次只能靠
+    用户在聊天框里读到的那一两行去猜。猜错过好几次：
+
+      - 属性表 key 是什么形态（猜到第三轮才对）
+      - 搜索拿到的到底是汉字还是拼音（a'man'ni 那次纯属撞上）
+      - 界面上出现了一件库里根本没有的装备（170 装等的旧赛季头）
+
+    最后这条尤其说明问题：代码、数据、装进客户端的文件，三者的版本
+    可能不一致，而界面上完全看不出来。所以让插件自己把身份报清楚：
+
+      代码版本（TOC）+ 数据版本（Lib.lua 里的构建指纹）+ 列表实际内容
+
+    三样对不上，就不用猜了。
+]]
+SLASH_WOWGEARDUMP1 = "/wgdump"
+SlashCmdList["WOWGEARDUMP"] = function()
+  local ver = (GetAddOnMetadata and GetAddOnMetadata("WoWGear", "Version")) or "?"
+  print("|cffd4b478WoWGear|r 代码版本 " .. tostring(ver))
+
+  print("|cffd4b478库|r " .. tostring(NS.LIB_BUILD or
+    "|cffff5555未知（Lib.lua 不是新版，或没被加载）|r"))
+
+  local n = 0
+  for _ in pairs(NS.LIB or {}) do n = n + 1 end
+  print(string.format("  实际解析 %d 件；头部 %d 件；来源表 %d 条",
+    n, #NS.Lib.search("head", "", 0), #(NS.LIB_SRC_LIST or {})))
+
+  print(string.format("|cffd4b478状态|r 模式=%s 部位=%s 关键字=[%s] 折算装等=%s",
+    tostring(NS.UI.mode), tostring(NS.UI.selected),
+    tostring(NS.UI.keyword or ""), tostring(NS.UI.targetIlvl)))
+
+  -- 列表实际前几条：名字 + id + 来源。出现库里没有的东西，这里立刻看得见
+  local list = NS.UI:BuildCandidates(NS.SLOT_BY_KEY[NS.UI.selected] or {}, NS.Gear.bags())
+  print(string.format("|cffd4b478列表|r 共 %d 条（库内命中 %s）",
+    #list, tostring(NS.UI.libHits)))
+  for i = 1, math.min(#list, 5) do
+    local it = list[i]
+    print(string.format("  %d. [%s] %s  %s 装等  %s",
+      i, tostring(it.id), tostring(it.name), tostring(it.ilvl or it.baseIlvl),
+      tostring(it.source or (it.fromLib and "库" or "客户端"))))
+  end
+
+  print("|cff888888把这几行截图发出来，比描述现象准得多。|r")
+end

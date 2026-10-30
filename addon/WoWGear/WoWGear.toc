@@ -1,7 +1,7 @@
 ## Interface: 120105
 ## Title: WoWGear 配装模拟
 ## Notes: 在游戏内扫描身上和背包的装备，模拟换装后四项绿字会变成多少
-## Version: 1.0.0
+## Version: 1.1.0
 ## Author: JustinSparrrow
 ## SavedVariables: WoWGearDB
 ## X-Category: Inventory

@@ -33,6 +33,8 @@
 local ADDON, NS = ...
 
 -- 共 1355 件
+NS.LIB_BUILD = "1355 件 / 头部 115 / 生成于 2026-10-31 06:54"
+
 NS.LIB_RAW = [==[
 158366|充能沙石指环|59|3|finger|11|7:7889,32:10000,49:7500|1||1|0|chongnengshashizhihuan|cnsszh|1
 158367|米利克萨之牙|59|3|trinket|12|4:6666|1||2|1|milikesazhiya|mlkszy|0
