@@ -219,8 +219,23 @@ end
 -- 一件装备贡献的属性，多属性合一的槽摊到主属性上
 local function itemStats(snap, item)
   local out = {}
-  if not item or not item.stats then return out end
+  if not item then return out end
   local st = item.stats
+
+  --[[
+      客户端没给属性表时的兜底：用装备库的权重 + 装等曲线自己算。
+
+      库里有 3570 件（含全部当前赛季装备），身上和背包的绝大多数都能查到。
+      算出来的值不含战火/泰坦那类额外加成，但比"整套模拟全 0"强得多——
+      而且这种情况下界面上会标出来（见 UI 的属性条星号逻辑）。
+
+      触发条件是 stats 为空：说明 GetItemStats 这版客户端的签名不认识。
+  ]]
+  if (not st or next(st) == nil) and item.id and NS.LIB and NS.LIB[item.id] then
+    st = NS.Lib.statsFor(item.id, item.ilvl, snap.ctx.primary) or {}
+    item.libFallback = true
+  end
+  if not st then return out end
   for code, v in pairs(st) do
     if code ~= "_multi" then out[code] = v end
   end

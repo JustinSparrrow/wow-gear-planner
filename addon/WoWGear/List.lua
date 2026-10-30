@@ -122,6 +122,19 @@ local scroll = CreateFrame("ScrollFrame", "WoWGearCandScroll", candPanel, "UIPan
 scroll:SetPoint("TOPLEFT", 0, 0)
 scroll:SetSize(324, 272)
 
+--[[
+    空列表提示。
+
+    搜索没结果、或者背包里这个部位一件可换的都没有时，右栏就是一片纯黑，
+    玩家分不清是"真的没有"还是"插件坏了"。给一句话说清楚。
+]]
+local emptyHint = candPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+emptyHint:SetFont(GameFontHighlight:GetFont(), 11, "OUTLINE")
+emptyHint:SetPoint("CENTER", candPanel, "CENTER", 0, 0)
+emptyHint:SetTextColor(0.45, 0.45, 0.47, 1)
+emptyHint:SetText("")
+emptyHint:Hide()
+
 local content = CreateFrame("Frame", nil, scroll)
 content:SetSize(318, 1)
 scroll:SetScrollChild(content)
@@ -433,6 +446,22 @@ function UI:RefreshLists(bagItems)
 
   for i = n + 1, #rows do rows[i]:Hide() end
   content:SetHeight(math.max(1, n * ROW_H))
+
+  -- 空列表时说清楚是"没有"还是"没选"
+  if n == 0 then
+    if not slotDef then
+      emptyHint:SetText("← 先在左边点一个部位")
+    elseif UI.mode == "lib" and UI.keyword and UI.keyword ~= "" then
+      emptyHint:SetText(string.format("装备库里没有名字含「%s」的%s", UI.keyword, slotDef.cn))
+    elseif UI.mode == "lib" then
+      emptyHint:SetText(string.format("装备库里没有%s", slotDef.cn))
+    else
+      emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
+    end
+    emptyHint:Show()
+  else
+    emptyHint:Hide()
+  end
 end
 
 --[[

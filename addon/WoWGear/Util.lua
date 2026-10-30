@@ -92,6 +92,47 @@ end
 
     返回 { id, link, name, ilvl, quality, icon, equipLoc, stats }
 ]]
+--[[
+    读物品的属性表。
+
+    **这个 API 的签名各版本不一致，必须容错**：
+      - 新：C_Item.GetItemStats(itemInfo)     返回 table
+      - 老：GetItemStats(itemLink, statTable) 把结果填进你给的表
+    参数可能是 link 字符串、itemID 数字、ItemInfo 对象，全试一遍。
+
+    为什么值得这么啰嗦：它失败的时候**不报错，只是返回空表**。
+    表现是"换装备后面板纹丝不动、所有候选差值都是 0"——
+    看起来像插件整体坏了，其实只是这一行没拿到数据。
+    （这次就是栽在这上面。）
+]]
+function NS.Item.readStats(link, id)
+  local attempts = {
+    function() return C_Item.GetItemStats(link) end,
+    function() return C_Item.GetItemStats(id) end,
+    function()
+      local t = {}
+      if GetItemStats then GetItemStats(link, t) end
+      return t
+    end,
+    function()
+      local t = {}
+      if GetItemStats then GetItemStats(id, t) end
+      return t
+    end,
+  }
+  local tried = {}
+  for _, fn in ipairs(attempts) do
+    local ok, raw = pcall(fn)
+    if ok and type(raw) == "table" and next(raw) ~= nil then
+      NS.Item.statsPath = table.concat(tried, "+") or "first"
+      return raw
+    end
+    tried[#tried + 1] = ok and "empty" or "err"
+  end
+  NS.Item.statsPath = "FAIL:" .. table.concat(tried, ",")
+  return nil
+end
+
 function NS.Item.get(linkOrID)
   if not linkOrID then return nil end
   local key = linkOrID
@@ -118,7 +159,7 @@ function NS.Item.get(linkOrID)
   end
 
   local stats = {}
-  local raw = C_Item.GetItemStats(itemLink or linkOrID)
+  local raw = NS.Item.readStats(itemLink or linkOrID, id)
   if raw then
     for modID, value in pairs(raw) do
       local code = NS.MOD[modID]

@@ -82,6 +82,37 @@ SlashCmdList["WOWGEAR"] = function(msg)
   end
 end
 
+-- ── 自检 ─────────────────────────────────────────────────
+--[[
+    读装备属性表这件事失败时**不报错，只是返回空表**。表现是"换装备后
+    面板一动不动、所有候选差值都是 0"——看起来像整个插件坏了。
+
+    所以进入世界后主动查一次：如果身上有装备读不到属性，当场打红字。
+    有这条，下次同样的故障用户一眼就能说出"是读属性那步挂了"，
+    而不是只能描述"没反应"。
+]]
+local function selfCheck()
+  NS.Item.clear()
+  local gear = NS.Gear.equipped()
+  local total, empty, sample = 0, 0, nil
+  for _, it in pairs(gear) do
+    total = total + 1
+    if not it.stats or next(it.stats) == nil then
+      empty = empty + 1
+      sample = it
+    end
+  end
+  if empty > 0 then
+    print(string.format("|cffff5555WoWGear|r 有 %d/%d 件装备读不到属性表（%s）",
+      empty, total, tostring(NS.Item.statsPath)))
+    if sample then
+      print(string.format("  例如「%s」itemID=%s —— 已退回用装备库的权重换算",
+        tostring(sample.name), tostring(sample.id)))
+    end
+    print("  如果换算出来的数字明显不对，把上面两行发给我。")
+  end
+end
+
 -- 登录时如果是一键导入的角色，物品数据可能还没拉全，先把界面预热的逻辑
 -- 挂到进入世界之后（那时候 GetInventoryItemLink 才一定有值）
 local boot = CreateFrame("Frame")
@@ -89,4 +120,11 @@ boot:RegisterEvent("PLAYER_ENTERING_WORLD")
 boot:SetScript("OnEvent", function(self)
   self:UnregisterEvent("PLAYER_ENTERING_WORLD")
   NS.Item.clear()
+  C_Timer.After(3, selfCheck)
 end)
+
+SLASH_WOWGEARDEBUG1 = "/wgcheck"
+SlashCmdList["WOWGEARDEBUG"] = function()
+  NS.Item.clear()
+  selfCheck()
+end

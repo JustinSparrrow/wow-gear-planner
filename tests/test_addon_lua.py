@@ -453,6 +453,57 @@ def main():
 
     lua.execute("NS.UI.mode = 'bag' NS.UI.sim = {} NS.UI.cand = nil NS.UI:Refresh()")
 
+    # ── 15. 属性表读不到时的兜底 ────────────────────
+    print()
+    print("─" * 62)
+    print("15. GetItemStats 失效时，能不能靠装备库兜住")
+    print("─" * 62)
+    # 这是线上真出过的故障：GetItemStats 签名不认识 → 返回空表 → 不报错，
+    # 表现是"换装备后面板一动不动、所有差值都是 0"。
+    lua.execute("""
+      -- 把所有读法都打断
+      C_Item.GetItemStats = function() return nil end
+      GetItemStats = nil
+      NS.Item.clear()
+
+      EQUIPPED = {}
+      BAGS = { [0] = {} }
+      -- 用库里的真实 itemID（158370 连击大戟，双手武器）
+      local old = mkItem(158370, 331, nil, "INVTYPE_2HWEAPON", "连击大戟")
+      EQUIPPED[16] = old
+      BAGS[0][1] = mkItem(158369, 334, nil, "INVTYPE_WEAPON", "充电破风锤")
+    """)
+    lua.execute("NS.Item.clear() NS.UI.sim = {} NS.UI.cand = nil NS.UI.mode='bag' NS.UI.selected='main_hand' NS.UI:Refresh()")
+
+    hl = lua.eval("NS.Item.statsPath") or ""
+    print(f"  读属性表的结果: {hl}")
+    check_eq("读失败被记录下来（不是静默）", "FAIL" in str(hl), True)
+
+    fb = lua.eval("NS.Lib.statsFor(158370, 331, 'agi')")
+    print(f"  兜底算出的属性: agi={fb['agi']} sta={fb['sta']} crit={fb['crit']} haste={fb['haste']}")
+    check_eq("兜底能算出主属性", (fb["agi"] or 0) > 0, True)
+    check_eq("兜底能算出绿字", (fb["crit"] or 0) + (fb["haste"] or 0) > 0, True)
+
+    # 换上另一件之后，差值必须非 0
+    lua.execute("""
+      local cands = NS.Gear.candidates("main_hand", NS.UI.snap.gear, NS.Gear.bags())
+      _simFallback = NS.Calc.simulate(NS.UI.snap, "main_hand", cands[2] or cands[1])
+    """)
+    dsum = abs(lua.eval("_simFallback.dStat.agi or 0")) + \
+           abs(lua.eval("_simFallback.dStat.crit or 0")) + \
+           abs(lua.eval("_simFallback.dStat.haste or 0"))
+    print(f"  换武器后的属性差总和: {dsum}")
+    check_eq("兜底状态下差值不是 0", dsum > 0, True)
+
+    # 恢复，别影响后面的断言
+    lua.execute("""
+      C_Item.GetItemStats = function(x)
+        local d = ITEM_DB[x]
+        return d and d.stats or nil
+      end
+      NS.Item.clear()
+    """)
+
     # ── 汇总 ────────────────────────────────────────────
     print()
     print("=" * 62)

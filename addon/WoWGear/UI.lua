@@ -625,6 +625,10 @@ end
 
 -- ── 打开 / 关闭 ──────────────────────────────────────────
 function UI:Show()
+  -- 没有选中部位时右栏就是空的。之前打开界面后直接点「装备库」会看到
+  -- 一片空白（右栏没有内容、也没有任何提示），看起来像插件坏了。
+  -- 默认选中头部，至少打开就有东西。
+  if not UI.selected then UI.selected = NS.SLOTS[1].key end
   frame:Show()
   UI:Refresh()
 end
