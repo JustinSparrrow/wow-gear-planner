@@ -161,11 +161,25 @@ src/build/        构建期脚本，离线跑，不进运行时
 │   ├── server/             网页服务（HTTP + JSON 接口 + 账号）
 │   ├── build/              构建期脚本
 │   └── web/                index.html + css/ + js/ + img/
-├── tools/                  sample_curve.py（采样曲线）、package_beta.py（打内测包）
-├── tests/                  237 + 40 项验收测试 + 样例 profile
+├── addon/WoWGear/          游戏内插件：一键导出角色评级与百分比
+├── tools/                  import_addon.py（导入插件数据）、sample_curve.py、package_beta.py
+├── tests/                  278 + 40 项验收测试 + 样例 profile
 ├── ref/                    SimC 源码片段，查公式时参考
 └── dist/                   内测包产物（可删）
 ```
+
+## 游戏内插件：补齐「天赋给了多少」
+
+网页端算绿字百分比，需要知道每个专精**天赋和被动一共加了多少**。那个数只有游戏里有。
+
+`addon/WoWGear` 是个小程序，输入 `/wg` 就把当前角色的评级、换算百分比、
+面板总数导成一行文本，粘进规划器自动补上这个专精的基线。
+
+它**只采集不计算**——插件拿不到全部装备数据库（只有客户端缓存过的物品），
+也不能联网，「换上那件会变成什么样」仍在网页端算。
+
+装上之后换专精点一下，10 秒录一个，比手动抄面板快且不会抄错。
+详见 `addon/WoWGear/README.md`。
 
 ## 网页界面
 
