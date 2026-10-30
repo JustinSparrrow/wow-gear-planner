@@ -8,7 +8,7 @@
     为什么不把计算也搬进插件：插件拿不到全装备数据库（只有客户端缓存过的物品），
     也不能联网。算「换上那件会变成什么样」必须靠完整数据，那部分留在网页端。
 
-    只读。不改任何游戏状态，不占 SavedVariables。
+    只读。不改任何游戏状态，不写 SavedVariables。
 ]]
 
 local ADDON, NS = ...
@@ -37,11 +37,29 @@ local SPEC_KEY = {
   [1467]="devastation", [1468]="preservation", [1473]="augmentation", [1480]="devourer",
 }
 
--- 战斗评级索引。不用 CR_XXX 全局常量：那是老版本残留，新版可能挪进
--- Enum/Constants 命名空间，写死数字反而稳（来源 FrameXML/PaperDollFrame.lua）。
+--[[
+    战斗评级索引。
+
+    **优先读游戏给的全局常量**（`CR_MASTERY` 这种），读不到才用写死的数字。
+    理由：这套索引在 6.0 大改过一次（武器技能、韧性那一批被删，后面整体前移），
+    以后还可能再挪。写死数字迟早过期，但全局常量也可能被暴雪清掉，所以两条腿走。
+
+    写死的值来自 FrameXML/PaperDollFrame.lua，是 **1-based** 的 Lua 层编号；
+    DBC / wowdev 上那张表是 **0-based**（那边的 CR_MASTERY 是 25），两者差 1，
+    查资料时别拿错表。
+]]
+local function cr(name, fallback)
+  return _G["CR_" .. name] or fallback
+end
+
 local CR = {
-  crit = 9, haste = 18, mastery = 26, vers = 29,
-  leech = 17, avoid = 21, speed = 14,
+  crit    = cr("CR_CRIT_MELEE", 9),
+  haste   = cr("CR_HASTE_MELEE", 18),
+  mastery = cr("CR_MASTERY", 26),
+  vers    = cr("CR_VERSATILITY_DAMAGE_DONE", 29),
+  leech   = cr("CR_LIFESTEAL", 17),
+  avoid   = cr("CR_AVOIDANCE", 21),
+  speed   = cr("CR_SPEED", 14),
 }
 
 local ORDER = { "crit", "haste", "mastery", "vers", "leech", "avoid", "speed" }
@@ -59,7 +77,7 @@ end
     R = rating（评级）
     B = bonus（GetCombatRatingBonus，这个评级换算出来的百分比，不含天赋）
     T = total（面板上显示的那个数，含天赋/被动）
-    所以「天赋给了多少」= T - R 对应的换算。两个都给我们才能算。
+    所以「天赋给了多少」= T 减去按曲线算出来的装备部分。三样都给才够用。
 ]]
 local function collect()
   local _, _, classID = UnitClass("player")
@@ -96,10 +114,17 @@ local function collect()
   -- 面板总数。暴击分物理/法术两条，法系和物理职业看的不是同一个，
   -- 所以两条都导出来，让网页端挑——猜错就会差十几个点。
   add("critT", n(GetCritChance(), 4))
-  add("spellCritT", n(GetSpellCritChance(1), 4))
+  -- GetSpellCritChance 在某些版本要传学派、某些版本无参，两种都试一下，
+  -- 取不到就写 0（网页端看到 0 会退回 critT，不会算出离谱的值）
+  local sc = 0
+  if GetSpellCritChance then
+    sc = select(1, GetSpellCritChance(1)) or select(1, GetSpellCritChance()) or 0
+  end
+  add("spellCritT", n(sc, 4))
   add("hasteT", n(GetHaste(), 4))
   -- 精通这里是「点数」，不是百分比。面板上那个百分比 = 点数 × 专精系数，
-  -- 系数我们已经有（spec_mastery），所以点数更有用。
+  -- 系数我们已经有（spec_mastery），所以点数更有用。mastT 给的是最终百分比，
+  -- 用来交叉验证。
   add("mastPts", n(GetMastery(), 4))
   add("mastT", n(GetMasteryEffect(), 4))
 
@@ -108,41 +133,77 @@ local function collect()
   return table.concat(t, ";")
 end
 
+--[[
+    自检：评级全读成 0 说明索引对不上（游戏改过编号），这时候导出的数据是废的，
+    但它长得跟正常数据一样，粘进去只会让网页端算出"这个角色没有任何绿字"。
+    所以宁可当场标红，也别让人拿着错数据去核对。
+]]
+local function check_ratings(text)
+  local hits = 0
+  for _, k in ipairs(ORDER) do
+    local v = tonumber(text:match(k .. "R=(%d+)"))
+    if v and v > 0 then hits = hits + 1 end
+  end
+  return hits
+end
+
 -- ── 界面 ────────────────────────────────────────────────
 local frame = CreateFrame("Frame", "WoWGearFrame", UIParent, "BasicFrameTemplateWithInset")
-frame:SetSize(580, 340)
+frame:SetSize(600, 340)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("DIALOG")
 frame:Hide()
 
-frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-frame.title:SetPoint("TOPLEFT", 14, -6)
-frame.title:SetText("WoWGear · 数据导出")
+-- BasicFrameTemplateWithInset 自带标题行（.TitleText），别自己再建一个，
+-- 两个会叠在同一个位置。
+if frame.TitleText then
+  frame.TitleText:SetText("WoWGear · 数据导出")
+end
 
 local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-hint:SetPoint("TOPLEFT", 18, -30)
-hint:SetPoint("TOPRIGHT", -18, -30)
+hint:SetPoint("TOPLEFT", 16, -30)
+hint:SetPoint("TOPRIGHT", -16, -30)
 hint:SetJustifyH("LEFT")
-hint:SetText("全选后 Ctrl+C 复制，粘到配装规划器的「导入」框里。\n"
+hint:SetText("框里已经全选，直接 Ctrl+C 复制，粘到配装规划器的「导入」框。\n"
   .. "|cffffd100建议脱战、清掉食物合剂等临时 buff 再导|r，否则读到的是被 buff 加过的数。")
 
-local eb = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+--[[
+    不能用 InputBoxTemplate：那个模板的背景是给单行输入框画的，
+    设成多行之后文字会溢出到背景外面，长文本也没有任何边框可依。
+    这里用 BackdropTemplate 自己画一个 9-slice 框，跟游戏原生输入框一个风格。
+
+    多行只是**视觉换行**：文本本身还是那一行，GetText() 和复制出来的内容里没有换行。
+]]
+local eb = CreateFrame("EditBox", nil, frame, "BackdropTemplate")
+eb:SetBackdrop({
+  bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = true, tileSize = 16, edgeSize = 12,
+  insets = { left = 4, right = 4, top = 4, bottom = 4 },
+})
+eb:SetBackdropColor(0, 0, 0, 0.55)
+eb:SetBackdropBorderColor(1, 1, 1, 0.18)
 eb:SetMultiLine(true)
-eb:SetSize(540, 210)
-eb:SetPoint("TOPLEFT", 22, -70)
 eb:SetAutoFocus(false)
+eb:SetMaxLetters(0)          -- 0 = 不限长度
 eb:SetFontObject(ChatFontNormal)
+eb:SetSize(556, 200)
+eb:SetPoint("TOPLEFT", 22, -72)
+eb:SetTextInsets(6, 6, 4, 4)
 eb:SetScript("OnEscapePressed", function() frame:Hide() end)
+
+local stamp = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+stamp:SetPoint("TOPLEFT", eb, "BOTTOMLEFT", 6, -6)
+stamp:SetPoint("TOPRIGHT", eb, "BOTTOMRIGHT", -6, -6)
+stamp:SetJustifyH("LEFT")
+
+local fill              -- 前向声明：按钮先建好，读数据的逻辑在后面才定义
 
 local refresh = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 refresh:SetSize(100, 22)
-refresh:SetPoint("BOTTOMLEFT", 22, 18)
-refresh:SetText("刷新")
-refresh:SetScript("OnClick", function()
-  eb:SetText(collect())
-  eb:HighlightText()
-  eb:SetFocus()
-end)
+refresh:SetPoint("BOTTOMLEFT", 22, 16)
+refresh:SetText("重新读取")
+refresh:SetScript("OnClick", function() fill() end)
 
 local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 close:SetSize(100, 22)
@@ -150,13 +211,21 @@ close:SetPoint("LEFT", refresh, "RIGHT", 8, 0)
 close:SetText("关闭")
 close:SetScript("OnClick", function() frame:Hide() end)
 
-local stamp = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-stamp:SetPoint("LEFT", close, "RIGHT", 12, 0)
-
-local function fill()
-  eb:SetText(collect())
+fill = function()
+  local text = collect()
+  eb:SetText(text)
+  -- 先给焦点再全选。反过来的话 HighlightText 在没有焦点时经常不生效，
+  -- 用户以为已经全选，Ctrl+C 复制到的是空的或者只有光标处。
+  eb:SetFocus()
   eb:HighlightText()
-  stamp:SetText("已生成，点「刷新」可重新读一次")
+
+  local hits = check_ratings(text)
+  if hits == 0 then
+    stamp:SetText("|cffff5555评级一个都没读到——这版游戏的战斗评级编号可能变了，"
+      .. "这份数据不能用|r")
+  else
+    stamp:SetText("|cff888888已是当前状态，点「重新读取」可以再取一次|r")
+  end
 end
 
 SLASH_WOWGEAR1 = "/wg"
@@ -167,11 +236,10 @@ SlashCmdList["WOWGEAR"] = function()
   else
     frame:Show()
     fill()
-    eb:SetFocus()
   end
 end
 
--- 第一次登录提示一下怎么用，只提示一次
+-- 第一次登录提示一下怎么用
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")
 boot:SetScript("OnEvent", function()

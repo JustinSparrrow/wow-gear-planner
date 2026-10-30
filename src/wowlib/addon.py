@@ -50,6 +50,16 @@ def _f(data, key, default=0.0):
         return default
 
 
+def main_stats(data):
+    """力量 / 敏捷 / 耐力 / 智力。
+
+    `parse()` 返回的是原文里的字符串，这里统一转成 float。
+    加这个函数是因为调用方很容易直接 `data["agi"]` 拿到 "2614"，
+    然后跟数字比大小或者相加时悄悄出错。
+    """
+    return {k: _f(data, k) for k in ("str", "agi", "sta", "int") if k in data}
+
+
 def ratings(data):
     """四维评级 + 三个第三属性评级。"""
     out = {}
