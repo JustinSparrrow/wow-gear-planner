@@ -23,7 +23,8 @@
 只要有 Python 3.10+，**没有第三方依赖**，不用装任何东西。
 
 ```bash
-git clone <这个仓库> && cd <目录>
+git clone https://github.com/JustinSparrrow/wow-gear-planner.git
+cd wow-gear-planner
 python main.py                 # 交互式，载入自带的样例角色
 python main.py --web           # 网页界面 http://127.0.0.1:8765
 python main.py 你的导出.txt     # 换成自己的 /simc 导出

@@ -1,0 +1,8 @@
+# 让 Windows 和 Linux 上的换行/编码看不出区别
+* text=auto
+
+# 二进制，别让 git 去动它的换行
+*.db binary
+*.jpg binary
+*.png binary
+*.zip binary
