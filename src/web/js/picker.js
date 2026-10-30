@@ -168,9 +168,10 @@ async function openExport(){
       simc 格式里没有"额外插槽"这个概念，Raidbots 不会算这个孔，模拟结果会比这里少这点属性。`);
   }
   if (!d.checksum){
-    // 改过装备就不带 `# Checksum` —— 它证明的是"插件原样输出"，改完就不成立了。
-    // 说明一句，免得有人拿这段去 Top Gear 被拒还以为是导出的锅。
-    notes.push(`已去掉 <code># Checksum</code>：那是插件"原样输出"的凭证，改过装备后就不该再带。粘进 Quick Sim 不受影响。`);
+    // 改过装备就不带 `# Checksum` —— Raidbots 靠它判断"这份输入有没有被改过"。
+    // 没有它就会在页面上标一个 Edited，那是正常的，不是报错。
+    notes.push(`已去掉 <code># Checksum</code>：Raidbots 靠它判断"这份输入改没改过"，
+      所以贴进去后它会标一个 <b>Edited</b> 提醒——正常的，不是报错。`);
   }
   $("ex-warn").innerHTML = notes.join("<br>");
   $("ex-warn").style.display = notes.length ? "" : "none";

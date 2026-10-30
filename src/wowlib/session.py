@@ -1064,6 +1064,22 @@ class Session:
             parts.append("crafted_stats=" + "/".join(map(str, item.crafted_stats)))
         return f"{key}=" + ",".join(parts)
 
+    def _bag_notes(self, key, item, seen):
+        """把一件装备写成背包段的三行注释。
+
+        `### Gear from Bags` 整段都是 `#` 注释，插件**不往这里写真正的装备行**。
+        Raidbots 是自己解析这些注释来建"可选装备池"的——Top Gear 的装备勾选框
+        就是从这里来的。所以格式必须和插件一致，多一个字段少一个都可能被忽略。
+        """
+        if str(item.item_id) in seen:
+            return []
+        seen.add(str(item.item_id))
+        lvl = item.comment_ilevel or item.ilevel
+        label = self._item_label(item)
+        return ["#",
+                f"# {label}" + (f" ({lvl})" if lvl else ""),
+                "# " + self._simc_line(key, item)]
+
     def to_simc(self):
         """把当前这套装备导出成 simc 字符串，能直接粘进 Raidbots / SimulationCraft。
 
@@ -1084,6 +1100,7 @@ class Session:
         has_checksum = False
         orig_checksum = None     # 插件原来那行的值，一件没动时原样带回去
         edited = False           # 有没有真的改过东西（决定 checksum 怎么处理）
+        bag_idx = info_idx = None   # 背包段起止，换过的装备要补进这段注释里
         for raw in (self.raw_text or "").splitlines():
             line = raw.strip()
             # 注释、空行、背包段：一律原样搬。漏一条注释就可能过不了 Raidbots 的校验
@@ -1099,6 +1116,9 @@ class Session:
                     continue
                 if "Gear from Bags" in line:
                     in_bags = True
+                    bag_idx = len(out)
+                elif line.startswith("### Additional Character Info"):
+                    info_idx = len(out)
                 out.append(raw)
                 last_comment = len(out) - 1
                 continue
@@ -1140,6 +1160,28 @@ class Session:
             if k not in done and item.db_slot not in ("shirt", "tabard"):
                 edited = True
                 out.append(self._simc_line(k, item))
+
+        # 换过的部位要补进背包注释。
+        #
+        # 为什么非补不可：`### Gear from Bags` 是 Raidbots 的"可选装备池"，
+        # Top Gear 靠它枚举组合。我们换上的那件游戏里并不存在（是这里假设的），
+        # 而原来那件被换掉了、也不在身上——两头都不在这段里，Top Gear 就一件
+        # 都看不见，只能跑当前这一套，"原 vs 新"根本比不了。
+        #
+        # 补进去之后这两件都能在 Top Gear 里勾选，对比直接出结果。
+        # 整段是注释，simc 解析时会跳过，最坏情况也只是被 Raidbots 忽略。
+        if info_idx is not None and edited:
+            bag_text = "\n".join(out[bag_idx:info_idx]) if bag_idx is not None else ""
+            seen = set(re.findall(r"\bid=(\d+)", bag_text))
+            extra = []
+            for k, cur in self.prof.items.items():
+                if not self._changed(k):
+                    continue
+                for it in (cur, self.original.get(k)):
+                    if it is not None:
+                        extra.extend(self._bag_notes(k, it, seen))
+            if extra:
+                out[info_idx:info_idx] = extra + ["#"]
 
         body = "\n".join(out)
         if not has_checksum:

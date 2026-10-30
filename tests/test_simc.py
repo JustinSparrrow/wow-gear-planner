@@ -855,6 +855,18 @@ def group_gem_slots():
         ("原值确实变了（因为我们没抄它）", True, orig_sum not in changed_text),
     ])
 
+    # 换过的装备要补进 `### Gear from Bags` 的注释里——那一段是 Raidbots 的
+    # "可选装备池"，Top Gear 就是从这里枚举的。不补的话：换上的那件游戏里没有、
+    # 原来那件又被换掉了不在身上，两头都看不见，"原 vs 新"压根比不了。
+    check("自选", "背包补进换装候选", [
+        ("换上的那件进了背包注释", True, "# head=,id=268230" in changed_text),
+        ("原来那件也进了", True, "# head=,id=271492" in changed_text),
+        ("原件的 bonus_id 没丢", True, "id=271492,bonus_id=6652/13696" in changed_text),
+        ("注释行带中文名", True, "# 永恒毒牙之冠 (334)" in changed_text),
+        # 一件没动时必须一个字都不插，否则"导出与原文逐字节一致"就不成立了
+        ("没改动时不插", False, "# head=,id=271492" in s8.to_simc()),
+    ])
+
 
 def group_update():
     """版本清单：判断"数据是不是这一代的"，而不是每次重做整个项目。
