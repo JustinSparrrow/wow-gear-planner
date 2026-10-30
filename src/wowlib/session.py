@@ -1035,8 +1035,20 @@ class Session:
         return ",".join(parts)
 
     def _simc_line(self, key, item):
-        """一件装备写成 simc 的一行。字段顺序和 /simc 导出的顺序一致。"""
-        parts = [(item.name or "").replace(",", "")]
+        """一件装备写成 simc 的一行。字段顺序和 /simc 导出的顺序一致。
+
+        **名字必须留空，只写 id。** 这不是省事，是 simc 的硬约束：
+        `engine/item/item.cpp` 里，装备行同时给了名字和 id 时，会拿名字和
+        自己 DBC 里的名字比对，一旦不一致就
+            sim->error("... has inconsistency between name '{}' and '{}' for id {}")
+        `sim->error` 会让整个模拟以失败退出——Raidbots 那边看到的就是
+        "input is not valid"，而装备本身一行都没错。
+
+        游戏插件正是因此才不写名字的：中文客户端拿到的名字是中文，
+        simc 必然不认，所以它只吐 `head=,id=271492`。我们曾经"好心"补上
+        英文名，正好踩在这个雷上，一整份 profile 被拒。
+        """
+        parts = [""]
         if item.item_id:
             parts.append(f"id={item.item_id}")
         if item.bonus_ids:
@@ -1070,6 +1082,8 @@ class Session:
         out, done, in_bags = [], set(), False
         last_comment = None      # 最近一条注释在 out 里的下标，换装备时要跟着改
         has_checksum = False
+        orig_checksum = None     # 插件原来那行的值，一件没动时原样带回去
+        edited = False           # 有没有真的改过东西（决定 checksum 怎么处理）
         for raw in (self.raw_text or "").splitlines():
             line = raw.strip()
             # 注释、空行、背包段：一律原样搬。漏一条注释就可能过不了 Raidbots 的校验
@@ -1081,6 +1095,7 @@ class Session:
                 # 改过装备之后原文的校验值必然对不上，所以先摘掉，最后按新内容重算。
                 if line.startswith("# Checksum:"):
                     has_checksum = True
+                    orig_checksum = line.split(":", 1)[1].strip()
                     continue
                 if "Gear from Bags" in line:
                     in_bags = True
@@ -1104,6 +1119,7 @@ class Session:
                 # content_tuning / crafting_quality），套装转化件丢了源装备 id
                 # 属性就全错了；而且玩家在界面上选过的自选属性会覆盖掉原文的顺序。
                 if self._changed(k):
+                    edited = True
                     out.append(self._simc_line(k, item))
                     # 上面那行 `# 中文名 (装等)` 写的是换之前的装备，跟着改掉——
                     # 不改的话导回去界面上显示的还是旧名字（注释优先于库里的名字）
@@ -1113,6 +1129,7 @@ class Session:
                         out[last_comment] = f"# {label}" + (f" ({lvl})" if lvl else "")
                 elif self._customized(k):
                     # 只动了宝石/附魔：保留原行，只替换这两段
+                    edited = True
                     out.append(self._patch_line(line, item))
                 else:
                     out.append(line)
@@ -1121,6 +1138,7 @@ class Session:
         # 原文里没有、但现在身上有的部位（理论上不该出现，兜底）
         for k, item in self.prof.items.items():
             if k not in done and item.db_slot not in ("shirt", "tabard"):
+                edited = True
                 out.append(self._simc_line(k, item))
 
         body = "\n".join(out)
@@ -1129,12 +1147,18 @@ class Session:
         # 插件 core.lua 的写法：
         #     local checksum = adler32(simulationcraftProfile)
         #     profile = profile .. '# Checksum: ' .. string.format('%x', checksum)
-        # 校验范围就是 `# Checksum:` 之前的**全部字节**（含结尾那串空行），
-        # 所以这里连换行一起算。改过装备之后必须重算，否则 Raidbots 会判定
-        # "input is not valid"——它拿这个值当"这是插件原始输出"的凭据。
+        # 校验范围就是 `# Checksum:` 之前的**全部字节**（含结尾那串空行）。
+        #
+        # 一件没改：把原来那个值原样还回去，导出的文本和插件输出一字不差，
+        #           Raidbots 才会认这是"插件原始输出"。
+        # 改过装备：**不再带 checksum**。这个值的作用是给"未经改动"背书，
+        #           改完装备它还带着就是一张假凭证；重算一个同样是在冒充，
+        #           而且无从验证。索性去掉，让 Raidbots 按普通 profile 处理
+        #           （Quick Sim 就是这条路，接受任意合法 profile）。
         payload = body + "\n"
-        digest = zlib.adler32(payload.encode("utf-8")) & 0xFFFFFFFF
-        return f"{payload}# Checksum: {digest:x}"
+        if not edited and orig_checksum:
+            return f"{payload}# Checksum: {orig_checksum}"
+        return payload
 
     def snapshot(self):
         """整份状态。前端靠它渲染，不用自己维护装备数据。"""

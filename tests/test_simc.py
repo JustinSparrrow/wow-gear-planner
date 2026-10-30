@@ -814,6 +814,16 @@ def group_gem_slots():
         ("下一行是头部装备", True, lines[idx].startswith("head=")),
     ])
 
+    # **装备行不能写名字。** simc 的 engine/item/item.cpp 里，同一行同时给了
+    # 名字和 id 时会拿名字和自己 DBC 的比，不一致就 sim->error，整个模拟失败。
+    # Raidbots 跑的就是 simc，失败表现成 "input is not valid"——装备一行没错却进不去。
+    # 游戏插件正是因此才只吐 `head=,id=271492`（中文客户端的名字 simc 必然不认）。
+    check("自选", "导出行不写名字", [
+        ("head 行名字留空", True, lines[idx].startswith("head=,id=")),
+        ("行内没有装备名", False, "Crown" in lines[idx] or "永恒" in lines[idx]),
+        ("id 还在", True, f"id=268230" in lines[idx]),
+    ])
+
     # 导出的文本要能原样导回来：这是用户"导出→再导入"的日常路径
     back = Session(connect(), parse("\n".join(exported)), load_budget())
     check("自选", "导出能导回来", [
@@ -834,12 +844,15 @@ def group_gem_slots():
         return _zlib.adler32(t[:i].encode("utf-8")) & 0xFFFFFFFF == claimed
 
     orig_sum = text.rsplit("# Checksum: ", 1)[1].strip()
-    new_sum = s9.to_simc().rsplit("# Checksum: ", 1)[1].strip()
+    changed_text = s9.to_simc()
     check("自选", "导出校验和", [
-        # 什么都没改时导出必须和原文逐字节一致（这是"不破坏插件格式"的硬指标）
-        ("未改动与原文一致", True, s8.to_simc() == text),
-        ("改过后仍然自洽", True, _checksum_ok(s9.to_simc())),
-        ("改过后值变了", True, new_sum != orig_sum),
+        # 一件没动时必须与原文逐字节一致（这是"不破坏插件格式"的硬指标）
+        ("未改动与原文一字不差", True, s8.to_simc() == text),
+        ("未改动时校验和自洽", True, _checksum_ok(s8.to_simc())),
+        # 改过装备后原值必然对不上。重算一个等于伪造"这是插件原样输出"的凭证，
+        # 而且无从自证；所以干脆不带，让它按普通 profile 走（Quick Sim 吃这个）。
+        ("改过后不再带 checksum", False, "# Checksum" in changed_text),
+        ("原值确实变了（因为我们没抄它）", True, orig_sum not in changed_text),
     ])
 
 

@@ -209,6 +209,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "name": name,
                 "changed": changed,
                 "drilled": drilled,
+                # 改过东西就没带 checksum（那是"插件原样输出"的凭证），
+                # 前端据此说明"为什么这段进不了 Top Gear 的 addon 输入框"
+                "checksum": "# Checksum" in text,
                 "meta": (f"{name} · 平均装等 {s.avg_ilevel()[0]} · "
                          f"改过 {changed} 件"),
             })

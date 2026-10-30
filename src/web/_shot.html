@@ -31,6 +31,18 @@
   if (shift) f.style.marginLeft = `-${shift}px`;
   f.onload = () => setTimeout(() => {
     try {
+      if (q.get("probe") === "export"){
+        // 导出弹层：先换一件装备再打开，才能看到"已去掉 Checksum"那条提示
+        const w = f.contentWindow;
+        if (q.get("equip")){
+          const c = q.get("equip").split(":");
+          w.fetch("/api/equip", {method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({slot: c[0], id: +c[1], ilevel: +c[2]})});
+        }
+        setTimeout(() => w.openExport(), 900);
+        return;
+      }
       if (q.get("probe") === "pct"){
         // 属性条：把四项的 HTML 全抓出来，确认 title 里那句"装备 xx% ＋ 天赋 xx%"
         const vs = f.contentDocument.querySelectorAll(".stat .v");
