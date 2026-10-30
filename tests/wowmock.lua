@@ -44,6 +44,20 @@ proto.Click = function(self)
   local h = rawget(self, "_onclick")
   if h then h(self) end
 end
+-- 尺寸 / 对齐：真实 Frame 都有，mock 也备一份，
+-- 免得写 UI 时因为"测试环境没有这个方法"而误判成代码错
+proto.SetWidth = function(self, w) rawset(self, "_w", w) end
+proto.SetHeight = function(self, h) rawset(self, "_h", h) end
+proto.GetWidth = function(self) return rawget(self, "_w") or 0 end
+proto.GetHeight = function(self) return rawget(self, "_h") or 0 end
+proto.SetSize = function(self, w, h) rawset(self, "_w", w); rawset(self, "_h", h) end
+proto.SetJustifyH = function(self, j) rawset(self, "_justify", j) end
+proto.GetJustifyH = function(self) return rawget(self, "_justify") end
+proto.SetWordWrap = function(self, b) rawset(self, "_wrap", b) end
+proto.SetNonSpaceWrap = function(self, b) end
+proto.SetCursor = function(self, c) end
+proto.EnableMouse = function(self, b) end
+
 proto.SetScript = function(self, event, fn)
   if event == "OnClick" then rawset(self, "_onclick", fn) end
   rawset(self, "_script_" .. event, fn)

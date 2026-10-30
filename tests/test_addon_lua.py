@@ -729,6 +729,23 @@ def main():
     check_eq("颈部确实一件没有", n_neck, 0)
     check_eq("别的部位有货时能指出来", lua.eval("_other ~= nil"), True)
 
+    # ── 拼音 ────────────────────────────────────────────
+    # 这条是本轮的核心：中文输入法在候选词**未确认**时，EditBox 的
+    # GetText() 返回的是拼音串（音节用撇号分隔），插件根本拿不到汉字。
+    # 用户看到输入框里是「阿曼尼」，我们收到的是 a'man'ni。
+    for kw, label in (("a'man'ni", "输入法原始拼音串（截图上就是这个）"),
+                      ("amanni", "全拼"),
+                      ("amn", "首字母"),
+                      ("AMN", "首字母大写"),
+                      ("阿曼尼", "汉字（输入法确认后）")):
+        n = lua.eval(f"#NS.Lib.search('back', [[{kw}]], 255)")
+        print(f"  {label:28s} {kw!r:12s} -> {n} 件")
+        check_eq(f"拼音/汉字都能搜到（{kw}）", n >= 1, True)
+
+    # 拼音不该把整个库都匹配进来
+    n_broad = lua.eval("#NS.Lib.search('back', 'amn', 255)")
+    check_eq("首字母匹配不是全量返回", n_broad < 30, True)
+
     lua.execute("NS.UI.search:SetText('') NS.UI.keyword = '' NS.UI.libCache = nil")
 
     # ── 汇总 ────────────────────────────────────────────

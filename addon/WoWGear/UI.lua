@@ -333,7 +333,7 @@ end)
 local searchHint = search:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 searchHint:SetPoint("LEFT", 8, 0)
 searchHint:SetTextColor(0.45, 0.45, 0.47, 1)
-searchHint:SetText("搜索装备名字…")
+searchHint:SetText("搜装备名 / 副本名…")
 
 local aPending = false
 search:SetScript("OnTextChanged", function(self, userInput)

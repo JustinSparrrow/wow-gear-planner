@@ -47,9 +47,11 @@ local ADDON, NS = ...
 do
   local raw = NS.LIB_RAW or ""
   local srcList = NS.LIB_SRC_LIST or {}
+  local srcPy = NS.LIB_SRC_PY or {}
   local specList = NS.LIB_SPEC_LIST or {}
 
   NS.LIB, NS.LIB_SRC, NS.LIB_SPEC = {}, {}, {}
+  NS.LIB_SRC_PY_BY_ID = {}
 
   local n = 0
   for line in raw:gmatch("[^\n]+") do
@@ -75,10 +77,15 @@ do
           st,                            -- 权重
           f[8] == "1",                   -- 本赛季
           tonumber(f[9]),                -- 自选属性总量（可能为空）
+          f[12] or "",                   -- 名字全拼
+          f[13] or "",                   -- 名字首字母
         }
 
         local si = tonumber(f[10])
-        if si and si > 0 then NS.LIB_SRC[id] = srcList[si] end
+        if si and si > 0 then
+          NS.LIB_SRC[id] = srcList[si]
+          NS.LIB_SRC_PY_BY_ID[id] = srcPy[si]
+        end
         local pi = tonumber(f[11])
         if pi and pi > 0 then NS.LIB_SPEC[id] = specList[pi] end
 
@@ -405,22 +412,116 @@ function Lib.matches(id, words)
   local src = (NS.LIB_SRC[id] or ""):lower()
   local idStr = tostring(id)
 
+  --[[
+      拼音也参与匹配——这不是锦上添花，是被真实行为逼出来的。
+
+      中文输入法在"候选词还没确认"时，EditBox 的 GetText() 给的是
+      **拼音串**，音节用撇号分隔：
+
+          输入框里显示：阿曼尼
+          GetText() 返回：a'man'ni
+
+      你看到的是输入法画在上面的预编辑文字，插件根本拿不到汉字。
+      所以拦截在这一层是没用的，只能让拼音本身能搜到。
+
+      装备名的全拼（amannizhaohuanpijin）和首字母（amnzhpj）都在
+      导出时算好存进来了，来源也一样。于是：
+
+          阿曼尼     -> 汉字直接匹配名字
+          a'man'ni   -> 拆成 a / man / ni，都在全拼里
+          amanni     -> 全拼子串
+          amn        -> 首字母子串
+  ]]
+  local py  = raw[9] or ""
+  local ini = raw[10] or ""
+  local spy = NS.LIB_SRC_PY_BY_ID[id] or ""
+
   for i = 1, #words do
     local w = words[i]
     if not (name:find(w, 1, true) or src:find(w, 1, true)
-            or idStr:find(w, 1, true)) then
+            or py:find(w, 1, true) or ini:find(w, 1, true)
+            or spy:find(w, 1, true) or idStr:find(w, 1, true)) then
       return false
     end
   end
   return true
 end
 
--- 拆词：空格分隔，全部转小写（中文不受影响，英文大小写不敏感）
+--[[
+    把关键词切成词。
+
+    ── 为什么要自己扫字节 ──────────────────────────────────
+    用户实际打出来的是「阿曼尼×」——末尾多了一个符号（输入法残留）。
+    整串匹配的话一件都搜不到，而屏幕上看着明明就是「阿曼尼」，
+    根本看不出多了什么：
+
+        搜 '阿曼尼'   -> 1 件（阿曼尼召唤披巾）
+        搜 '阿曼尼×'  -> 0 件
+
+    Lua 5.1 没有 UTF-8 支持，`%S` / `%p` 都是按字节算的，拿多字节符号
+    没办法。所以这里手写一个极简扫描，按 UTF-8 首字节判断字符长度：
+
+        1 字节   ASCII：字母数字算词字符，标点当分隔
+        2 字节   ×、°、é 这类符号：当分隔（这就是那个 ×）
+        3~4 字节 汉字/假名/emoji：算词字符
+
+    这样「阿曼尼×」会被切成一个词「阿曼尼」，正好是用户想搜的东西。
+    宁可忽略一个不认识的字，也不能因为一个符号把整个搜索废掉。
+]]
 function Lib.words(keyword)
-  local out = {}
-  for w in ((keyword or ""):lower():gsub("　", " ")):gmatch("%S+") do
-    out[#out + 1] = w
+  local s = (keyword or ""):lower()
+  local out, buf = {}, {}
+  local i, n = 1, #s
+
+  local function flush()
+    if #buf > 0 then
+      out[#out + 1] = table.concat(buf)
+      buf = {}
+    end
   end
+
+  while i <= n do
+    local b = s:byte(i)
+    local len
+    if b < 0x80 then len = 1
+    elseif b < 0xE0 then len = 2
+    elseif b < 0xF0 then len = 3
+    else len = 4 end
+
+    local ch = s:sub(i, i + len - 1)
+    local keep
+    if len == 1 then
+      keep = ch:match("%w") ~= nil          -- ASCII 字母数字（ID 也是数字）
+    elseif len == 3 then
+      --[[
+          三字节里混着两类东西，按首字节分开：
+
+            E2 ??   通用标点、箭头、★☆ 这类符号      -> 丢弃
+            E3 80   CJK 标点：。，、；：！？（）《》   -> 丢弃
+            E3 81+  日文假名                         -> 保留
+            E4-E9   汉字                             -> 保留
+            EA-ED   韩文、CJK 扩展                    -> 保留
+            EF ??   全角形式：，。！？（）ＡＢ        -> 丢弃
+
+          UTF-8 的顺序就是 Unicode 码点顺序，所以直接比首字节就够。
+      ]]
+      local b2 = ch:byte(2)
+      if b == 0xE2 or b == 0xEF then
+        keep = false
+      elseif b == 0xE3 and b2 ~= nil and b2 < 0x81 then
+        keep = false                        -- U+3000–U+303F 标点区
+      else
+        keep = true
+      end
+    else
+      keep = false                           -- 两字节符号 / 四字节 emoji
+    end
+
+    if keep then buf[#buf + 1] = ch else flush() end
+    i = i + len
+  end
+  flush()
+
   return out
 end
 

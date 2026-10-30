@@ -103,6 +103,34 @@ def clean(s):
     return s.replace(",", "，")
 
 
+# ── 拼音 ─────────────────────────────────────────────────
+# 玩家用中文输入法打字时，WoW 的 EditBox 在"组合未提交"状态下
+# `GetText()` 返回的是拼音串（'a\'man\'ni' 这种，音节用撇号分隔），
+# 不是汉字——用户看到输入框里是"阿曼尼"，插件收到的却是拼音。
+#
+# 与其和客户端的行为较劲，不如把拼音也纳入索引：装备名的全拼和首字母
+# 都存一份，这样"阿曼尼""amanni""a'man'ni""amn"全都能搜到。
+#
+# 代价是每件多约 25 字节（1355 件 ≈ 34KB）。这个体积换"怎么打都能搜到"，
+# 值。
+try:
+    from pypinyin import lazy_pinyin
+except ImportError:                                     # pragma: no cover
+    lazy_pinyin = None
+
+
+def pinyin_of(text):
+    """返回 (全拼, 首字母)。没有 pypinyin 就返回空串，不影响导出。"""
+    if not text or lazy_pinyin is None:
+        return "", ""
+    parts = lazy_pinyin(text)
+    full = "".join(ch for p in parts for ch in p.lower()
+                   if ch.isascii() and ch.isalnum())
+    ini = "".join(p[0].lower() for p in parts
+                  if p and p[0].isascii() and p[0].isalnum())
+    return full, ini
+
+
 def load_name_map():
     """英文名 -> 中文名。没有这个文件就退化成全英文，不影响导出。"""
     path = os.path.join(ROOT, "data", "raw", "instances_zhcn.json")
@@ -201,6 +229,7 @@ def main():
 
     rows, kept = [], set()
     src_pool, spec_pool = Pool(), Pool()
+    src_py = {}          # 中文来源 -> 它的拼音，写文件时按 src_pool 顺序取
     opt_count = 0
     skipped = 0
 
@@ -242,14 +271,20 @@ def main():
             if spec_list:
                 spec_idx = spec_pool.add(tuple(spec_list))
 
-        src_idx = src_pool.add(sources.get(item_id, ""))
+        src_text = sources.get(item_id, "")
+        src_idx = src_pool.add(src_text)
+        if src_idx and src_idx not in src_py:
+            src_py[src_idx] = pinyin_of(src_text)
 
-        # 字段：id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制
+        name_py, name_ini = pinyin_of(name)
+
+        # 字段：id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制|全拼|首字母
         rows.append("|".join([
             str(item_id), name, str(r["raw_ilevel"] or 0), str(r["quality"] or 1),
             slot, str(r["inventory_type"] or 0), stat_str,
             "1" if r["is_current"] else "0",
             str(opt_total or ""), str(src_idx), str(spec_idx),
+            name_py, name_ini,
         ]))
         kept.add(item_id)
 
@@ -270,7 +305,11 @@ def main():
     out.append("    两张去重索引表后约 100KB，Curve.lua 加载时解析一遍。")
     out.append("")
     out.append("    ── 字段 ───────────────────────────────────────────")
-    out.append("    id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制")
+    out.append("    id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制|全拼|首字母")
+    out.append("")
+    out.append("    最后两列是名字的拼音（全拼 / 首字母）。存在的理由：中文输入法")
+    out.append("    在组合未提交时，EditBox 的 GetText() 给的是拼音串（a'man'ni），")
+    out.append("    不是汉字。与其跟客户端较劲，不如让拼音也能搜。")
     out.append("")
     out.append("    属性写成 statID:权重，逗号分隔。**存的是分配权重（万分比），")
     out.append("    不是属性数值**：真实数值 = 权重 × 装等系数 × 1e-4，系数由")
@@ -295,6 +334,13 @@ def main():
     out.append("NS.LIB_SRC_LIST = {")
     for v in src_pool.items:
         out.append(f'  "{v.replace(chr(34), chr(39))}",')
+    out.append("}")
+    out.append("")
+    out.append("-- 来源的拼音，和上面一一对应（下标相同）")
+    out.append("NS.LIB_SRC_PY = {")
+    for i in range(1, len(src_pool.items) + 1):
+        full, ini = src_py.get(i, ("", ""))
+        out.append(f'  "{full}/{ini}",')
     out.append("}")
     out.append("")
 

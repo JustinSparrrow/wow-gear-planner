@@ -128,12 +128,28 @@ scroll:SetSize(324, 272)
     搜索没结果、或者背包里这个部位一件可换的都没有时，右栏就是一片纯黑，
     玩家分不清是"真的没有"还是"插件坏了"。给一句话说清楚。
 ]]
-local emptyHint = candPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-emptyHint:SetFont(GameFontHighlight:GetFont(), 11, "OUTLINE")
-emptyHint:SetPoint("CENTER", candPanel, "CENTER", 0, 0)
-emptyHint:SetTextColor(0.45, 0.45, 0.47, 1)
+-- 提示做成按钮：搜到的东西在别的部位时，点一下就跳过去，
+-- 省得玩家自己去左栏一个个试（搜索是按部位来的，他未必知道那件属于哪）
+local emptyBtn = CreateFrame("Button", nil, candPanel)
+emptyBtn:SetPoint("CENTER", candPanel, "CENTER", 0, 0)
+emptyBtn:SetSize(310, 76)
+emptyBtn:Hide()
+
+local emptyHint = emptyBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+emptyHint:SetFont(GameFontHighlight:GetFont(), 11, "")
+emptyHint:SetPoint("CENTER", emptyBtn, "CENTER", 0, 0)
+-- 限宽 + 居中：提示最长三行，不限宽会横着顶到面板外面去
+emptyHint:SetWidth(300)
+emptyHint:SetJustifyH("CENTER")
+emptyHint:SetTextColor(0.52, 0.52, 0.55, 1)
 emptyHint:SetText("")
-emptyHint:Hide()
+
+emptyBtn:SetScript("OnClick", function(self)
+  local slot = self.jumpSlot
+  if not slot then return end
+  self.jumpSlot = nil
+  UI:Select(slot)
+end)
 
 local content = CreateFrame("Frame", nil, scroll)
 content:SetSize(318, 1)
@@ -326,13 +342,19 @@ function UI:BuildCandidates(slotDef, bagItems)
     if #words > 0 then
       local kept = {}
       for _, it in ipairs(list) do
+        -- 库里有这件装备就借它的拼音索引，背包模式也能用拼音搜
+        local lraw = it.id and NS.LIB[it.id]
         local name = (it.name or ""):lower()
         local src = (it.id and NS.LIB_SRC[it.id] or ""):lower()
+        local py = lraw and lraw[9] or ""
+        local ini = lraw and lraw[10] or ""
+        local spy = (it.id and NS.LIB_SRC_PY_BY_ID[it.id]) or ""
         local idStr = tostring(it.id or "")
         local ok = true
         for _, w in ipairs(words) do
           if not (name:find(w, 1, true) or src:find(w, 1, true)
-                  or idStr:find(w, 1, true)) then
+                  or py:find(w, 1, true) or ini:find(w, 1, true)
+                  or spy:find(w, 1, true) or idStr:find(w, 1, true)) then
             ok = false
             break
           end
@@ -471,8 +493,11 @@ function UI:RefreshLists(bagItems)
 
     -- 把"折算装等"讲清楚：不然玩家会以为库里 298 装等那件和身上 334 是一回事
     if UI.mode == "lib" then
+      -- 用 libHits 而不是 #scored：列表第一条永远是身上那件，
+      -- 拿列表长度当件数的话，搜不到任何东西也会显示"1 件"，
+      -- 看着像"有一条结果"，实际全是空的
       UI.rightSub:SetText(string.format("|cff888888%s %d 件 · 按 %d 装等折算|r",
-        slotDef.cn, #scored, UI.targetIlvl or 0))
+        slotDef.cn, UI.libHits or 0, UI.targetIlvl or 0))
     else
       UI.rightSub:SetText(string.format("|cff888888%s %d 件|r", slotDef.cn, #scored))
     end
@@ -502,13 +527,18 @@ function UI:RefreshLists(bagItems)
   if UI.mode == "lib" then hits = UI.libHits or 0 end
 
   if hits == 0 then
+    emptyBtn.jumpSlot = nil
+    -- 显示清洗过之后的词：用户打进来的可能是「阿曼尼×」，
+    -- 原样回显只会让人更困惑"我明明打对了"
+    local shown = table.concat(NS.Lib.words(UI.keyword), " ")
+    if shown == "" then shown = UI.keyword or "" end
+
     if not slotDef then
       emptyHint:SetText("← 先在左边点一个部位")
     elseif UI.mode == "lib" and not NS.LIB then
       emptyHint:SetText("装备库没加载（Lib.lua 不在插件目录里）")
-    elseif UI.mode == "lib" and UI.keyword and UI.keyword ~= "" then
-      -- 搜索是按部位来的，但玩家不一定记得那件装备属于哪个部位。
-      -- 别的部位有货就把话说清楚，否则他看到空白只会以为搜索坏了。
+    elseif UI.mode == "lib" and shown ~= "" then
+      -- 搜索是按部位来的，别的部位有货就把话说清楚，并且给个能点的东西
       local other = NS.Lib.searchOther(UI.selected, UI.keyword, UI.snap.ctx.specID)
       if other then
         local parts = {}
@@ -516,25 +546,26 @@ function UI:RefreshLists(bagItems)
           local def = NS.SLOT_BY_KEY[other[i][1]]
           parts[#parts + 1] = string.format("%s %d", def and def.cn or other[i][1], other[i][2])
         end
+        local first = NS.SLOT_BY_KEY[other[1][1]]
+        emptyBtn.jumpSlot = other[1][1]
         emptyHint:SetText(string.format(
-          "%s没有「%s」。其他部位有：%s", slotDef.cn, UI.keyword,
-          table.concat(parts, "、")))
+          "「%s」不在%s\n其他部位：%s\n点击跳到%s",
+          shown, slotDef.cn, table.concat(parts, "、"),
+          first and first.cn or other[1][1]))
       else
-        emptyHint:SetText(string.format("没有匹配「%s」的%s。可以搜装备名、副本名或物品 ID，按 ESC 清空",
-          UI.keyword, slotDef.cn))
+        emptyHint:SetText(string.format(
+          "没有「%s」\n可以搜装备名、副本名或物品 ID\nESC 清空", shown))
       end
     elseif UI.mode == "lib" then
       emptyHint:SetText(string.format("库里没有本专精能用的%s", slotDef.cn))
+    elseif shown ~= "" then
+      emptyHint:SetText(string.format("背包里没有「%s」\nESC 清空搜索", shown))
     else
-      if UI.keyword and UI.keyword ~= "" then
-        emptyHint:SetText(string.format("背包里没有匹配「%s」的%s，按 ESC 清空搜索", UI.keyword, slotDef.cn))
-      else
-        emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
-      end
+      emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
     end
-    emptyHint:Show()
+    emptyBtn:Show()
   else
-    emptyHint:Hide()
+    emptyBtn:Hide()
   end
 end
 
