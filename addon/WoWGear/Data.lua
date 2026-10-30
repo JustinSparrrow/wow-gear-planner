@@ -89,37 +89,51 @@ NS.SLOT_ACCEPT = {
 
 -- ── 属性代号 ─────────────────────────────────────────────
 --[[
-    物品属性表的 key 是 ITEM_MOD_* 常量。**优先读游戏常量**，读不到才用数字。
-    理由跟评级索引一样：暴雪挪过这些编号，写死迟早过期。
+    物品属性表的 key 有三种形态（见 Util.modID）：数字 32、
+    常量名字符串 "ITEM_MOD_CRIT_RATING_SHORT"、本地化名字 "暴击"。
 
-    71~74 是"多属性合一"的占位（力量敏捷智力三合一之类），
-    真实分配由专精决定，这里按职业主属性拆开。
+    **这里曾经有个只在真客户端才出现的坑：**
+
+    原来写的是 `_G["ITEM_MOD_" .. name] or fallback`，想着"优先读游戏常量"。
+    但 `_G["ITEM_MOD_AGILITY"]` 在游戏里是**字符串**"敏捷"（不是数字），
+    于是 NS.MOD 的键变成了一堆中文，数字键一个都没有 → 全部查不到。
+    测试环境里 `_G` 没有这些常量，自动退化成数字，所以测试全绿。
+    典型的假通过：测试通过只说明测试环境跟客户端不一样。
+
+    现在统一以**数字**为键，本地化字符串作为别名同时注册。
 ]]
-local function mod(name, fallback)
-  return _G["ITEM_MOD_" .. name] or fallback
+NS.MOD = {}
+NS.MOD_MULTI = {}
+
+local function mod(name, id, code)
+  NS.MOD[id] = code
+  local s = _G["ITEM_MOD_" .. name]
+  if type(s) == "string" then NS.MOD[s] = code end
 end
 
-NS.MOD = {
-  [mod("AGILITY", 3)]          = "agi",
-  [mod("STRENGTH", 4)]         = "str",
-  [mod("INTELLECT", 5)]        = "int",
-  [mod("STAMINA", 7)]          = "sta",
-  [mod("CRIT_RATING", 32)]     = "crit",
-  [mod("HASTE_RATING", 36)]    = "haste",
-  [mod("VERSATILITY", 40)]     = "vers",
-  [mod("MASTERY_RATING", 49)]  = "mastery",
-  [mod("CR_SPEED", 61)]        = "speed",
-  [mod("CR_LIFESTEAL", 62)]    = "leech",
-  [mod("CR_AVOIDANCE", 63)]    = "avoid",
-}
+local function modMulti(name, id, codes)
+  NS.MOD_MULTI[id] = codes
+  local s = _G["ITEM_MOD_" .. name]
+  if type(s) == "string" then NS.MOD_MULTI[s] = codes end
+end
+
+mod("AGILITY",          3,  "agi")
+mod("STRENGTH",         4,  "str")
+mod("INTELLECT",        5,  "int")
+mod("STAMINA",          7,  "sta")
+mod("CRIT_RATING",     32,  "crit")
+mod("HASTE_RATING",    36,  "haste")
+mod("VERSATILITY",     40,  "vers")
+mod("MASTERY_RATING",  49,  "mastery")
+mod("CR_SPEED",        61,  "speed")
+mod("CR_LIFESTEAL",    62,  "leech")
+mod("CR_AVOIDANCE",    63,  "avoid")
 
 -- 多属性合一槽，独立处理（值要摊到主属性上）
-NS.MOD_MULTI = {
-  [mod("AGI_STR_INT", 71)] = { "agi", "str", "int" },
-  [mod("AGI_STR", 72)]     = { "agi", "str" },
-  [mod("AGI_INT", 73)]     = { "agi", "int" },
-  [mod("STR_INT", 74)]     = { "str", "int" },
-}
+modMulti("AGI_STR_INT", 71, { "agi", "str", "int" })
+modMulti("AGI_STR",     72, { "agi", "str" })
+modMulti("AGI_INT",     73, { "agi", "int" })
+modMulti("STR_INT",     74, { "str", "int" })
 
 NS.SECONDARY = { "crit", "haste", "mastery", "vers" }
 NS.PRIMARY = { "str", "agi", "int" }

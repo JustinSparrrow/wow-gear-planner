@@ -328,6 +328,7 @@ function UI:BuildCandidates(slotDef, bagItems)
       end
       list = kept
     end
+    UI.libHits = nil
     return list
   end
 
@@ -335,6 +336,7 @@ function UI:BuildCandidates(slotDef, bagItems)
   local key = table.concat({ UI.selected or "", UI.keyword or "",
                              UI.targetIlvl or 0, snap.ctx.primary or "" }, "|")
   if UI.libCache and UI.libCache.key == key then
+    UI.libHits = UI.libCache.hits
     return UI.libCache.list
   end
 
@@ -347,6 +349,24 @@ function UI:BuildCandidates(slotDef, bagItems)
     local row = {}
     for k, v in pairs(cur) do row[k] = v end
     row.current = true
+
+    --[[
+        基准也要过一遍同样的折算。
+
+        候选是"库里权重 × 目标装等"算出来的，身上那件却是客户端给的实物数值。
+        两边不在同一把尺子上：身上 331、候选按 334 折算，Δ 就会系统性偏向候选
+        ——每件都显得比实际好，这正是模拟器最容易骗人的方向。
+
+        所以基准也用同一套折算，比的就只剩属性配比。
+        读不到库数据（旧赛季、库里没有的）才退回实物值。
+    ]]
+    local norm = cur.id and NS.Lib.statsFor(cur.id, UI.targetIlvl, snap.ctx.primary)
+    if norm then
+      row.realStats = row.stats
+      row.stats = norm
+      row.normed = true
+    end
+
     list[1] = row
   end
 
@@ -356,7 +376,10 @@ function UI:BuildCandidates(slotDef, bagItems)
     if it then list[#list + 1] = it end
   end
 
-  UI.libCache = { key = key, list = list }
+  -- 记下"库里命中几件"（不含身上那件）。身上那件永远在列表第一条，
+  -- 所以光看 #list 永远看不出"搜索把库筛空了"。
+  UI.libHits = #ids
+  UI.libCache = { key = key, list = list, hits = #ids }
   return list
 end
 
@@ -451,14 +474,26 @@ function UI:RefreshLists(bagItems)
   for i = n + 1, #rows do rows[i]:Hide() end
   content:SetHeight(math.max(1, n * ROW_H))
 
-  -- 空列表时说清楚是"没有"还是"没选"
-  if n == 0 then
+  --[[
+      空列表时说清楚是哪一种"空"。
+
+      装备库模式下身上那件永远占着第一条，所以 `n` 恒大于 0，
+      光判断 `n == 0` 会把"搜索把库筛空了"显示成"有一条结果"——
+      玩家看到的是一行孤零零的当前装备，跟坏掉没区别。
+      所以按 `UI.libHits`（库里真正命中几件）来判断。
+  ]]
+  local hits = n
+  if UI.mode == "lib" then hits = UI.libHits or 0 end
+
+  if hits == 0 then
     if not slotDef then
       emptyHint:SetText("← 先在左边点一个部位")
+    elseif UI.mode == "lib" and not NS.LIB then
+      emptyHint:SetText("装备库没加载（Lib.lua 不在插件目录里）")
     elseif UI.mode == "lib" and UI.keyword and UI.keyword ~= "" then
-      emptyHint:SetText(string.format("装备库里没有名字含「%s」的%s", UI.keyword, slotDef.cn))
+      emptyHint:SetText(string.format("库里没有名字含「%s」的%s，按 ESC 清空搜索", UI.keyword, slotDef.cn))
     elseif UI.mode == "lib" then
-      emptyHint:SetText(string.format("装备库里没有%s", slotDef.cn))
+      emptyHint:SetText(string.format("库里没有本专精能用的%s", slotDef.cn))
     else
       emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
     end

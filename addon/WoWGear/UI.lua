@@ -249,6 +249,21 @@ local function makeTab(x, label, mode)
     UI.mode = mode
     UI.cand = nil
     UI.libCache = nil
+
+    --[[
+        切模式必须清掉搜索词。
+
+        两个模式的候选池完全不是一回事：在背包里搜"阿曼尼"可能搜到三件，
+        在装备库里一件都匹配不上。不清的话切过去就是一片空白，
+        玩家会以为"装备库是坏的、搜不到没有的装备"（截图里就是这个）。
+
+        这类"状态串台"比功能缺失更伤人：功能在，但看起来像没了。
+    ]]
+    if UI.search then
+      UI.search:SetText("")
+      UI.keyword = ""
+    end
+
     UI:Refresh()
   end)
 
@@ -304,7 +319,16 @@ search:SetAutoFocus(false)
 search:SetMaxLetters(40)
 search:SetFontObject(ChatFontNormal)
 search:SetTextInsets(6, 6, 0, 0)
-search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+-- ESC 先清空再失焦：搜了一半想回全量列表，按 ESC 比全选删掉顺手
+search:SetScript("OnEscapePressed", function(self)
+  if (self:GetText() or "") ~= "" then
+    self:SetText("")
+    UI.keyword = ""
+    if UI.RefreshListOnly then UI:RefreshListOnly() end
+  else
+    self:ClearFocus()
+  end
+end)
 
 local searchHint = search:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 searchHint:SetPoint("LEFT", 8, 0)
@@ -389,12 +413,26 @@ local function paintSorts()
 end
 UI.paintSorts = paintSorts
 
--- 只重刷右栏，不重算快照（打字时不需要重读角色状态）
+--[[
+    只重刷右栏，不重算快照（打字时不需要重读角色状态）。
+
+    这里必须走 `UI.refreshFooter` 而不是直接写 `refreshFooter()`：
+    那个函数在下面两百行才声明为 local，写在这里的是一个**全局**名字，
+    调用时是 nil。后果是搜索框每敲一个字、排序按钮每点一次都在这里报
+    "attempt to call global 'refreshFooter' (a nil value)" ——
+    报错之后列表根本没刷新，表现出来就是"搜索没反应、排序没反应"。
+    （这个 bug 一直存在，只被 DOM/UI 层的测试漏掉了。）
+]]
 function UI:RefreshListOnly()
   paintSorts()
   UI.libCache = nil
+  -- 库模式下快照里的基准也得折算（RefreshListOnly 不重建快照，
+  -- 漏掉这步就会出现"基准按实物、候选按折算"，Δ 偏乐观）
+  if UI.mode == "lib" and UI.snap then
+    NS.Calc.normalizeToLib(UI.snap, UI.targetIlvl, UI.snap.ctx.primary)
+  end
   if UI.RefreshLists then UI:RefreshLists(NS.Gear.bags()) end
-  refreshFooter()
+  if UI.refreshFooter then UI.refreshFooter() end
 end
 
 -- ── 底栏：模拟详情 ───────────────────────────────────────
@@ -539,6 +577,11 @@ function UI:Refresh()
   -- 否则曲线会在 1 装等处外推出一个荒唐的属性值
   UI.targetIlvl = (snap.ilvl and snap.ilvl >= 100) and NS.round(snap.ilvl) or 334
 
+  -- 库模式下基准也走同一套折算，见 NS.Calc.normalizeToLib 的说明
+  if UI.mode == "lib" then
+    NS.Calc.normalizeToLib(snap, UI.targetIlvl, ctx.primary)
+  end
+
   -- 有任何一个槽在模拟，就按模拟状态重算"换完之后的面板"
   local hasSim = next(UI.sim) ~= nil
 
@@ -629,6 +672,14 @@ function UI:Show()
   -- 一片空白（右栏没有内容、也没有任何提示），看起来像插件坏了。
   -- 默认选中头部，至少打开就有东西。
   if not UI.selected then UI.selected = NS.SLOTS[1].key end
+
+  -- 关掉窗口时搜索词会留在框里，下次打开照样把列表筛空。
+  -- 每次打开都从全量开始，比"记得上次搜了什么"重要。
+  if UI.search and (UI.search:GetText() or "") ~= "" then
+    UI.search:SetText("")
+    UI.keyword = ""
+    UI.libCache = nil
+  end
   frame:Show()
   UI:Refresh()
 end

@@ -150,21 +150,73 @@ local MOD_BY_NAME = {
   crit = 32, criticalstrike = 32, critrating = 32,
   haste = 36, hasterating = 36,
   mastery = 49, masteryrating = 49,
-  versatility = 40,
+  versatility = 40, versatilityrating = 40,
   speed = 61, leech = 62, lifesteal = 62, avoidance = 63,
+}
+
+--[[
+    实测拿到的 key 长这样（一条自检日志，来自真实客户端）：
+
+      ITEM_MOD_MASTERY_RATING_SHORT = 99
+      ITEM_MOD_STAMINA_SHORT        = 3777
+      ITEM_MOD_AGILITY_SHORT        = 183
+      ITEM_MOD_VERSATILITY          = 99
+      RESISTANCE0_NAME              = 248      -- 护甲
+
+    也就是说 key 是**全局常量的名字**，不是它的值。中文客户端里
+    `_G["ITEM_MOD_AGILITY_SHORT"]` 的值是"敏捷"（字符串），所以
+    `_G[k]` 那条路永远拿到 string、拿不到数字，之前整个映射自然全落空。
+    （之前我只想到"数字 id"和"属性名"两种，恰好都不是。）
+
+    结论：别指望整串精确匹配，**找特征词**。名字里含 MASTERY 就是精通，
+    含 AGILITY 就是敏捷——前缀统一是 ITEM_MOD_，后缀是 _SHORT 或 _RATING，
+    中间还会夹 RATING，用子串匹配全都吃得下。
+]]
+local MOD_TOKENS = {
+  { "VERSATILITY", 40 },   -- 放最前：别的词都不含它，先排除干扰
+  { "MASTERY",     49 },
+  { "STAMINA",      7 },
+  { "AGILITY",      3 },
+  { "STRENGTH",     4 },
+  { "INTELLECT",    5 },
+  { "HASTE",       36 },
+  { "CRIT",        32 },
+  { "AVOIDANCE",   63 },
+  { "LEECH",       62 },
+  { "LIFESTEAL",   62 },
+  { "SPEED",       61 },
+}
+
+-- 中文客户端如果哪天直接给本地化名字，也认
+local MOD_CN = {
+  ["耐力"] = 7,  ["敏捷"] = 3,  ["力量"] = 4,  ["智力"] = 5,
+  ["暴击"] = 32, ["急速"] = 36, ["精通"] = 49, ["全能"] = 40,
+  ["加速"] = 61, ["吸血"] = 62, ["闪避"] = 63,
 }
 
 function NS.Item.modID(k)
   if type(k) == "number" then return k end
   if type(k) ~= "string" then return k end
 
-  -- "ITEM_MOD_CRIT_RATING" -> 客户端常量
+  if MOD_CN[k] then return MOD_CN[k] end
+
+  -- 万一某个客户端版本给的就是数字常量名，_G 能直接查到
   local v = _G[k]
   if type(v) == "number" then return v end
 
-  -- "Crit" / "Critical Strike" 这类名字
-  local norm = k:lower():gsub("[^%a]", "")
-  return MOD_BY_NAME[norm] or k
+  local norm = k:upper():gsub("[^%u]", "")
+
+  -- 护甲单独标出来：它不参与绿字换算，但要知道是"认出来了、只是不算"
+  if norm:find("^RESISTANCE") or norm:find("ARMOR", 1, true) then
+    return "armor"
+  end
+
+  for _, t in ipairs(MOD_TOKENS) do
+    if norm:find(t[1], 1, true) then return t[2] end
+  end
+
+  -- "Crit" / "CriticalStrike" / "CritRating" 这类写法
+  return MOD_BY_NAME[norm:lower()] or k
 end
 
 function NS.Item.get(linkOrID)
@@ -197,7 +249,8 @@ function NS.Item.get(linkOrID)
   if raw then
     for modID, value in pairs(raw) do
       modID = NS.Item.modID(modID)
-      local code = NS.MOD[modID]
+      -- 护甲认得出但不参与计算：它不是绿字，跟百分比换算无关
+      local code = (modID ~= "armor") and NS.MOD[modID] or nil
       if code then
         stats[code] = (stats[code] or 0) + value
       else

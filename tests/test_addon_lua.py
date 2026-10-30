@@ -542,6 +542,113 @@ def main():
     check_eq("自选槽标记得上", bool(lua.eval(
         "NS.Lib.build(244582, 334, 'agi').hasOpt")), True)
 
+    # ── 17. 真实客户端给的 key 形态 ──────────────────
+    print()
+    print("─" * 62)
+    print("17. 真实客户端 key：ITEM_MOD_XXX_SHORT（实测日志逐字照搬）")
+    print("─" * 62)
+    # 用户自检打出来的是这张表：
+    # ITEM_MOD_MASTERY_RATING_SHORT = 99
+    # ITEM_MOD_STAMINA_SHORT        = 3777
+    # ITEM_MOD_AGILITY_SHORT        = 183
+    # ITEM_MOD_VERSATILITY          = 99
+    # RESISTANCE0_NAME              = 248
+    # key 是**常量名**，不是它的值。而且中文客户端里
+    # _G["ITEM_MOD_AGILITY_SHORT"] 的值是"敏捷"（字符串），
+    # 所以"把常量名当 _G 键查数字"这条路根本走不通。
+    lua.execute("""
+      -- 还原中文客户端的真实环境
+      ITEM_MOD_AGILITY = "敏捷"        ITEM_MOD_AGILITY_SHORT = "敏捷"
+      ITEM_MOD_STAMINA = "耐力"        ITEM_MOD_STAMINA_SHORT = "耐力"
+      ITEM_MOD_MASTERY_RATING = "精通" ITEM_MOD_MASTERY_RATING_SHORT = "精通"
+      ITEM_MOD_VERSATILITY = "全能"
+      ITEM_MOD_CRIT_RATING = "暴击"    ITEM_MOD_CRIT_RATING_SHORT = "暴击"
+      ITEM_MOD_HASTE_RATING = "急速"   ITEM_MOD_HASTE_RATING_SHORT = "急速"
+
+      _link17 = mkItem(999017, 331, {}, "INVTYPE_LEGS", "远行者的加固腿铠")
+      C_Item.GetItemStats = function(x)
+        if x == _link17 then
+          return {
+            ["ITEM_MOD_MASTERY_RATING_SHORT"] = 99,
+            ["ITEM_MOD_STAMINA_SHORT"]        = 3777,
+            ["RESISTANCE0_NAME"]              = 248,
+            ["ITEM_MOD_VERSATILITY"]          = 99,
+            ["ITEM_MOD_AGILITY_SHORT"]        = 183,
+          }
+        end
+        local d = ITEM_DB[x]
+        return d and d.stats or nil
+      end
+      NS.Item.clear()
+      _i17 = NS.Item.get(_link17)
+    """)
+    st = lua.eval("_i17.stats")
+    print(f"  解析结果: agi={st['agi']} sta={st['sta']} mastery={st['mastery']} "
+          f"vers={st['vers']} crit={st['crit']} armor={st['armor']}")
+    check_eq("敏捷 183", st["agi"], 183)
+    check_eq("耐力 3777", st["sta"], 3777)
+    check_eq("精通 99", st["mastery"], 99)
+    check_eq("全能 99", st["vers"], 99)
+    check_eq("护甲不混进绿字", st["armor"], None)
+    check_eq("没有一个 key 落空", "unmapped" in str(lua.eval("NS.Item.statsPath")), False)
+
+    # 这条是真正的回归点：Data.lua 重跑一遍（此时 _G 里全是中文字符串），
+    # NS.MOD 必须仍以数字为键。原来 `_G["ITEM_MOD_AGILITY"] or fallback`
+    # 会把键变成"敏捷"，数字全丢——而测试环境没有这些常量，所以从没抓到。
+    chunk = lua.eval("function(s, n) return assert(loadstring(s, n)) end")(
+        read(os.path.join(ADDON, "Data.lua")), "Data.lua")
+    chunk("WoWGear", ns)
+    print(f"  Data.lua 在中文常量环境下重建后：NS.MOD[3]={lua.eval('NS.MOD[3]')} "
+          f"NS.MOD['敏捷']={lua.eval(chr(39).join(['NS.MOD[', '敏捷', ']']))}")
+    check_eq("数字键仍在（假通过的根源）", lua.eval("NS.MOD[3]"), "agi")
+    check_eq("中文字符串别名也留着", lua.eval("NS.MOD['敏捷']"), "agi")
+
+    # ── 18. 切模式必须清搜索词 ──────────────────────
+    print()
+    print("─" * 62)
+    print("18. 切到装备库时，别让上一个模式的搜索词把库筛空")
+    print("─" * 62)
+    # 线上现象：背包里搜"阿曼尼"，切到装备库后整个库只剩一行当前装备，
+    # 看起来像"库里根本没有未拥有的装备"。
+    lua.execute("""
+      NS.UI.mode = "bag"
+      NS.UI.keyword = "阿曼尼"
+      NS.UI.search:SetText("阿曼尼")
+      NS.UI.tabs.lib:GetScript("OnClick")(NS.UI.tabs.lib)
+    """)
+    check_eq("切模式后关键字被清掉", lua.eval("NS.UI.keyword"), "")
+    check_eq("搜索框文本也清了", lua.eval("NS.UI.search:GetText()"), "")
+    hits = lua.eval("NS.UI.libHits") or 0
+    print(f"  切过去后库里命中 {hits} 件")
+    check_eq("装备库有内容（不是空的）", hits > 20, True)
+
+    # 搜一个库里绝对没有的词，必须给出提示而不是一片空白
+    lua.execute("""
+      NS.UI.keyword = "zzzz不存在zzzz"
+      NS.UI.libCache = nil
+      NS.UI:RefreshListOnly()
+    """)
+    check_eq("搜索无结果时 libHits 为 0", lua.eval("NS.UI.libHits"), 0)
+    lua.execute("NS.UI.keyword = '' NS.UI.libCache = nil NS.UI:RefreshListOnly()")
+
+    # 基准必须和候选一起折算，否则 Δ 会系统性偏向候选（每件都显得更好）
+    lua.execute("""
+      local list = NS.UI:BuildCandidates(NS.SLOT_BY_KEY[NS.UI.selected], {})
+      _base = list[1]
+      _baseSim = NS.Calc.simulate(NS.UI.snap, NS.UI.selected, _base)
+    """)
+    base = lua.globals()._base
+    print(f"  基准装备: {base.name}  normed={base.normed}")
+    print("  基准与快照同一套数字:", lua.eval("""(function()
+      local g = NS.UI.snap.gear[NS.UI.selected]
+      return string.format("快照 crit=%s / 基准 crit=%s", tostring(g.stats.crit),
+        tostring(_base.stats.crit))
+    end)()"""))
+    check_eq("基准也走了同一套折算", bool(base.normed), True)
+    check_eq("基准对自己的差值为 0",
+             abs(lua.eval("_baseSim.dStat.crit or 0")) +
+             abs(lua.eval("_baseSim.dStat.mastery or 0")), 0)
+
     # ── 汇总 ────────────────────────────────────────────
     print()
     print("=" * 62)

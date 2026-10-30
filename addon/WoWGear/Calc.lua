@@ -270,6 +270,36 @@ NS.Calc.itemStats = itemStats
       dPrimary 主属性变化
       dIlvl   装等变化
 ]]
+--[[
+    把身上装备的属性整体换成"库折算值"。
+
+    装备库模式下的候选全是「库权重 × 目标装等」算出来的，而身上那件是
+    客户端给的实物数值。两边装等根本不同（身上 331 实物 vs 候选 334 折算），
+    差出来的就不只是属性配比，还夹着一份装等差。后果是 Δ 系统性偏向候选：
+    每件都显得比实际好——模拟器最容易骗人、也最难被发现的错法。
+
+    所以库模式下把基准也折算一遍，比的就只剩配比。快照每次 Refresh 重建，
+    切回"我的装备"自动恢复实物值，不需要手动还原。
+]]
+function NS.Calc.normalizeToLib(snap, ilvl, primary)
+  if not NS.LIB then return 0 end
+  local n = 0
+  for _, it in pairs(snap.gear) do
+    if it and it.id then
+      local st = NS.Lib.statsFor(it.id, ilvl, primary)
+      if st then
+        -- 幂等：RefreshListOnly 会重复调用（每敲一个字一次），
+        -- 第二次不能把已经折算过的值当成"实物值"存下来
+        if not it.normed then it.realStats = it.stats end
+        it.stats = st
+        it.normed = true
+        n = n + 1
+      end
+    end
+  end
+  return n
+end
+
 function NS.Calc.simulate(snap, slotKey, cand)
   local old = snap.gear[slotKey]
   local a = itemStats(snap, old)
