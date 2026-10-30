@@ -20,7 +20,7 @@ ADDON = os.path.join(ROOT, "addon", "WoWGear")
 MOCK = os.path.join(ROOT, "tests", "wowmock.lua")
 
 # 顺序必须跟 WoWGear.toc 一致
-FILES = ["Data.lua", "Util.lua", "Gear.lua", "Calc.lua",
+FILES = ["Data.lua", "Lib.lua", "Util.lua", "Curve.lua", "Gear.lua", "Calc.lua",
          "UI.lua", "List.lua", "Export.lua", "Core.lua"]
 
 fails = []
@@ -327,6 +327,131 @@ def main():
     else:
         print("  [FAIL] 找不到导出用的 EditBox")
         fails.append("export-editbox")
+
+    # ── 12. 曲线：Lua 版 vs python 版 ──────────────────
+    print()
+    print("─" * 62)
+    print("12. Lua 版装等曲线必须和 python 版 curve.py 算出一个数")
+    print("─" * 62)
+    sys.path.insert(0, ROOT)
+    from src.wowgear import stats as py_stats
+
+    # 充能沙石指环：耐力 7889 / 暴击 10000 / 精通 7500，戒指（jewel 档）
+    py_vals = py_stats.item_values("finger", 334, [
+        {"code": "sta", "alloc": 7889},
+        {"code": "crit", "alloc": 10000},
+        {"code": "mastery", "alloc": 7500},
+    ])
+    lua_vals = lua.eval("NS.Lib.statsFor(158366, 334, 'agi')")
+    print(f"  python: {py_vals}")
+    print(f"  lua:    sta={lua_vals['sta']} crit={lua_vals['crit']} mastery={lua_vals['mastery']}")
+    for k in ("sta", "crit", "mastery"):
+        check_eq(f"{k} 两版一致（容差 1）", abs(lua_vals[k] - py_vals[k]) <= 1, True)
+
+    # 双手武器按"大件"档算，不能按单手
+    py_w = py_stats.item_values("main_hand", 334, [{"code": "agi", "alloc": 5259}],
+                                inventory_type=17)
+    lua_w = lua.eval("NS.Lib.statsFor(158370, 334, 'agi')")
+    print(f"  双手武器敏捷 python={py_w.get('agi')} lua={lua_w['agi']}")
+    check_eq("双手武器走大件档", abs(lua_w["agi"] - py_w["agi"]) <= 1, True)
+    # 和单手比，必须明显更高（这就是当初 python 端踩过的坑）
+    lua_1h = lua.eval("NS.Lib.statsFor(158369, 334, 'int')")
+    print(f"  同装等单手武器智力={lua_1h['int']}（应该明显低于双手）")
+    check_eq("双手 > 单手", lua_w["agi"] > (lua_1h["int"] or 0), True)
+
+    # ── 13. 装备库搜索 ──────────────────────────────
+    print()
+    print("─" * 62)
+    print("13. 装备库：按部位、关键字、专精筛")
+    print("─" * 62)
+    n_head = lua.eval("NS.Lib.countFor('head', 255)")
+    n_all = lua.eval("NS.Lib.countFor('head', 0)")
+    print(f"  头部：全部 {n_all} 件 / 猎人可用 {n_head} 件")
+    check_eq("猎人可用的头部足够多（能规划）", n_head > 20, True)
+
+    lua.execute("_s = NS.Lib.search('head', '盔', 255)")
+    n_kw = len(lua.globals()._s)
+    print(f"  搜「盔」命中 {n_kw} 件")
+    check_eq("关键字搜索有结果", n_kw > 0, True)
+
+    # 专精限制：找一个限定了非猎人的物品
+    import sqlite3, json as _json
+    conn = sqlite3.connect(os.path.join(ROOT, "data", "wowgear.db"))
+    locked = None
+    for iid, sp in conn.execute("SELECT id, specs FROM items WHERE specs IS NOT NULL LIMIT 400"):
+        try:
+            lst = _json.loads(sp)
+        except Exception:
+            continue
+        if lst and 255 not in lst:
+            locked = iid
+            break
+    conn.close()
+    if locked:
+        got = lua.eval(f"NS.Lib.allowed({locked}, 255)")
+        check_eq(f"专精限制生效（{locked} 猎人不能用）", bool(got), False)
+        got2 = lua.eval(f"NS.Lib.allowed({locked}, {_json.loads(conn_specs) if False else 66})")
+        print(f"        同一件对专精 66 是否可用: {bool(got2)}")
+    else:
+        print("  [SKIP] 没找到带专精限制的物品")
+
+    # ── 14. 端到端：切到装备库模式 ──────────────────
+    print()
+    print("─" * 62)
+    print("14. 端到端：切到装备库，看能不能挑一件自己没有的")
+    print("─" * 62)
+    import time as _time
+    lua.execute("""
+      NS.UI.mode = "lib"
+      NS.UI.keyword = ""
+      NS.UI.selected = "head"
+      NS.UI.libCache = nil
+    """)
+    t0 = _time.time()
+    lua.execute("NS.UI:Refresh()")
+    dt = _time.time() - t0
+    sub = lua.eval("NS.UI.rightSub:GetText()") or ""
+    print(f"  刷新耗时 {dt*1000:.0f} ms")
+    print(f"  标题: {sub}")
+    check_eq("标题标明了折算装等", "折算" in sub, True)
+    check_eq("刷新在 300ms 内（不卡手）", dt < 0.3, True)
+
+    # 挑一件库里最好的头换上，看属性对不对
+    lua.execute("""
+      local ids = NS.Lib.search("head", "", 255)
+      _best = NS.Lib.build(ids[1], NS.UI.targetIlvl, NS.UI.snap.ctx.primary)
+      NS.UI.sim.head = _best
+      NS.UI.cand = _best
+      NS.UI:Refresh()
+    """)
+    best = lua.globals()._best
+    print(f"  换上的库装备: {best.name}（基础 {best.baseIlvl} 装等，按 {lua.eval('NS.UI.targetIlvl')} 折算）")
+    print(f"  折算后属性: crit={best.stats.crit} mastery={best.stats.mastery}")
+    newCrit2 = float(lua.eval("NS.UI.statCells.crit.value:GetText()").rstrip("%"))
+    check_eq("库装备换上去后面板变了", abs(newCrit2 - 38.57) > 0.001, True)
+    check_eq("左栏显示成模拟态", lua.eval("NS.UI.sim.head ~= nil"), True)
+
+    # 库装备的"本赛季"标记不能和背包物品的"身上那件"撞名字，
+    # 撞了会让列表里所有本赛季装备都显示成"当前"
+    check_eq("库装备没被误标成「当前」", lua.eval("_best.current == nil"), True)
+    check_eq("库装备带本赛季标记", bool(lua.eval("_best.curSeason")), True)
+
+    # 排序维度生效：score 取的是选中那条属性的差值
+    lua.execute("""
+      local sim = NS.Calc.simulate(NS.UI.snap, "head", _best)
+      _s_crit = NS.Calc.score(sim, "crit")
+      _s_mast = NS.Calc.score(sim, "mastery")
+      _d_crit = sim.dStat.crit or 0
+      _d_mast = sim.dStat.mastery or 0
+    """)
+    check_eq("score(crit) == 暴击差值",
+             abs(lua.eval("_s_crit") - lua.eval("_d_crit")) < 0.001, True)
+    check_eq("score(mastery) == 精通差值",
+             abs(lua.eval("_s_mast") - lua.eval("_d_mast")) < 0.001, True)
+    check_eq("两条属性的分数不一样（说明真的按维度排）",
+             abs(lua.eval("_s_crit") - lua.eval("_s_mast")) > 1, True)
+
+    lua.execute("NS.UI.mode = 'bag' NS.UI.sim = {} NS.UI.cand = nil NS.UI:Refresh()")
 
     # ── 汇总 ────────────────────────────────────────────
     print()

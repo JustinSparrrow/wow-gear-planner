@@ -204,20 +204,198 @@ for i, key in ipairs(NS.SECONDARY) do
   UI.statCells[key] = { cell = cell, label = label, value = value, sub = sub, delta = delta }
 end
 
--- ── 主导航（左栏标题 / 右栏标题）────────────────────────
+-- ── 右栏标题 + 模式切换 ─────────────────────────────────
 local leftHead = text(frame, 12, C.gold)
 leftHead:SetPoint("TOPLEFT", 16, -140)
 leftHead:SetText("当前装备")
+UI.leftHead = leftHead
 
-local rightHead = text(frame, 12, C.gold)
-rightHead:SetPoint("TOPLEFT", 442, -140)
-rightHead:SetText("候选装备")
+--[[
+    右栏两个模式：我有的 / 装备库。
+
+    为什么非要有第二个：只比背包里的东西，那玩家自己在游戏里换一下
+    就知道结果了，插件等于没用。**规划的价值在于回答"我还没有的那件
+    值不值得去刷"**，所以必须能翻全部可获得的装备。
+
+    装备库里的属性是按角色当前装等**折算**的，不是实物数值——库里的
+    基础装等跟玩家身上的不是一个体系（59/108/197/298 混在一张表里），
+    不统一就没法横着比。代价是丢了"这件装等更高"的信息，
+    所以列表里仍然显示物品自身的参考装等。
+]]
+UI.mode = "bag"        -- "bag" = 我有的，"lib" = 装备库
+UI.keyword = ""
+
+local tabs = {}
+local function makeTab(x, label, mode)
+  local b = CreateFrame("Button", nil, frame, "BackdropTemplate")
+  b:SetSize(80, 20)
+  b:SetPoint("TOPLEFT", x, -139)
+  b:SetBackdrop({ bgFile = FLAT_TEX, edgeFile = BORDER_TEX,
+    tile = true, tileSize = 16, edgeSize = 8,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+  b:SetBackdropColor(0.10, 0.10, 0.115, 0.85)
+  b:SetBackdropBorderColor(1, 1, 1, 0.08)
+
+  local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  fs:SetFont(GameFontHighlight:GetFont(), 11, "OUTLINE")
+  fs:SetPoint("CENTER", 0, 0)
+  fs:SetTextColor(0.6, 0.6, 0.62, 1)
+  fs:SetText(label)
+  b.label = fs
+  b.mode = mode
+
+  b:SetScript("OnClick", function()
+    if UI.mode == mode then return end
+    UI.mode = mode
+    UI.cand = nil
+    UI.libCache = nil
+    UI:Refresh()
+  end)
+
+  tabs[mode] = b
+  return b
+end
+
+makeTab(438, "我的装备", "bag")
+makeTab(522, "装备库", "lib")
 
 local rightSub = text(frame, 10, C.dim)
-rightSub:SetPoint("LEFT", rightHead, "RIGHT", 8, 0)
+rightSub:SetPoint("LEFT", tabs.lib, "RIGHT", 10, 0)
+-- 右对齐到窗口右边：这段文字会随"件数 + 折算装等"变长，
+-- 只设左边锚点的话一旦变长就顶出窗口
+rightSub:SetPoint("RIGHT", frame, "RIGHT", -14, 0)
+rightSub:SetJustifyH("RIGHT")
 rightSub:SetText("")
+UI.rightSub = rightSub
+UI.tabs = tabs
 
-UI.leftHead, UI.rightHead, UI.rightSub = leftHead, rightHead, rightSub
+local function paintTabs()
+  for mode, b in pairs(tabs) do
+    if mode == UI.mode then
+      b:SetBackdropColor(0.28, 0.23, 0.12, 1)
+      b:SetBackdropBorderColor(0.95, 0.75, 0.28, 1)
+      b.label:SetTextColor(1, 0.82, 0.25, 1)
+    else
+      b:SetBackdropColor(0.10, 0.10, 0.115, 0.85)
+      b:SetBackdropBorderColor(1, 1, 1, 0.08)
+      b.label:SetTextColor(0.6, 0.6, 0.62, 1)
+    end
+  end
+end
+UI.paintTabs = paintTabs
+
+-- ── 搜索框 ───────────────────────────────────────────────
+--[[
+    背包里东西多的时候一样要找，所以这个框两个模式都留着，只是
+    「我的装备」模式下的搜索发生在几十件里，几乎瞬间出结果。
+
+    输入节流 180ms：每敲一个字母都重排一次列表的话，中文字典里
+    一次连续输入能触发十几次全量重算，手快的会明显感觉到顿。
+]]
+local search = CreateFrame("EditBox", nil, frame, "BackdropTemplate")
+search:SetPoint("TOPLEFT", 438, -163)
+search:SetSize(250, 18)
+search:SetBackdrop({ bgFile = FLAT_TEX, edgeFile = BORDER_TEX,
+  tile = true, tileSize = 16, edgeSize = 8,
+  insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+search:SetBackdropColor(0, 0, 0, 0.45)
+search:SetBackdropBorderColor(1, 1, 1, 0.10)
+search:SetAutoFocus(false)
+search:SetMaxLetters(40)
+search:SetFontObject(ChatFontNormal)
+search:SetTextInsets(6, 6, 0, 0)
+search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+local searchHint = search:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+searchHint:SetPoint("LEFT", 8, 0)
+searchHint:SetTextColor(0.45, 0.45, 0.47, 1)
+searchHint:SetText("搜索装备名字…")
+
+local aPending = false
+search:SetScript("OnTextChanged", function(self, userInput)
+  local t = self:GetText() or ""
+  searchHint:SetShown(t == "")
+  if not userInput then return end
+  UI.keyword = t
+  if aPending then return end
+  aPending = true
+  C_Timer.After(0.18, function()
+    aPending = false
+    if UI.RefreshListOnly then UI:RefreshListOnly() end
+  end)
+end)
+
+UI.search = search
+
+-- ── 排序依据 ─────────────────────────────────────────────
+--[[
+    为什么让玩家手动选排序，而不是给一个"综合评分"：
+
+    同部位的装备总属性**完全相同**（暴雪预算制：每件头盔都是 主属性 5259 /
+    绿字 7000 / 耐力 7889 的预算），差别只在配比——这件给暴击精通，
+    那件给急速全能。所以"哪件更好"完全取决于你在堆什么属性。
+
+    插件算不出 DPS，就没有资格替你决定什么属性更重要。与其编一个权重
+    表让玩家照着选，不如把选择权交回去：点哪条，就按哪条排。
+]]
+UI.sortBy = (WoWGearDB and WoWGearDB.sortBy) or "crit"
+
+local sortBtns = {}
+local function makeSortBtn(x, key)
+  local b = CreateFrame("Button", nil, frame, "BackdropTemplate")
+  b:SetSize(22, 18)
+  b:SetPoint("TOPLEFT", x, -163)
+  b:SetBackdrop({ bgFile = FLAT_TEX, edgeFile = BORDER_TEX,
+    tile = true, tileSize = 16, edgeSize = 8,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+  b:SetBackdropColor(0.10, 0.10, 0.115, 0.85)
+  b:SetBackdropBorderColor(1, 1, 1, 0.08)
+
+  local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  fs:SetFont(GameFontHighlight:GetFont(), 11, "OUTLINE")
+  fs:SetPoint("CENTER", 0, 0)
+  fs:SetText(NS.STAT_SHORT[key] or key)
+  b.label = fs
+  b.key = key
+
+  b:SetScript("OnClick", function()
+    if UI.sortBy == key then return end
+    UI.sortBy = key
+    WoWGearDB = WoWGearDB or {}
+    WoWGearDB.sortBy = key
+    UI:RefreshListOnly()
+  end)
+
+  sortBtns[key] = b
+  return b
+end
+
+for i, key in ipairs(NS.SECONDARY) do
+  makeSortBtn(692 + (i - 1) * 24, key)
+end
+
+local function paintSorts()
+  for key, b in pairs(sortBtns) do
+    if key == UI.sortBy then
+      b:SetBackdropColor(0.28, 0.23, 0.12, 1)
+      b:SetBackdropBorderColor(0.95, 0.75, 0.28, 1)
+      b.label:SetTextColor(1, 0.82, 0.25, 1)
+    else
+      b:SetBackdropColor(0.10, 0.10, 0.115, 0.85)
+      b:SetBackdropBorderColor(1, 1, 1, 0.08)
+      b.label:SetTextColor(0.6, 0.6, 0.62, 1)
+    end
+  end
+end
+UI.paintSorts = paintSorts
+
+-- 只重刷右栏，不重算快照（打字时不需要重读角色状态）
+function UI:RefreshListOnly()
+  paintSorts()
+  UI.libCache = nil
+  if UI.RefreshLists then UI:RefreshLists(NS.Gear.bags()) end
+  refreshFooter()
+end
 
 -- ── 底栏：模拟详情 ───────────────────────────────────────
 local footer = panelLite(frame, 12, -466, 776, 84)
@@ -311,8 +489,16 @@ local function refreshFooter()
   local name = cand.name or "?"
   local q = NS.QUALITY_COLOR[cand.quality or 1] or C.white
   local slotCN = NS.SLOT_BY_KEY[UI.selected] and NS.SLOT_BY_KEY[UI.selected].cn or UI.selected
-  UI.footTitle:SetText(string.format("|cff%02x%02x%02x%s|r  →  %s  |cff888888(%d → %d 装等)|r",
-    q[1] * 255, q[2] * 255, q[3] * 255, name, slotCN, r.oldIlvl, r.newIlvl))
+  local colorHex = string.format("|cff%02x%02x%02x", q[1] * 255, q[2] * 255, q[3] * 255)
+  if cand.fromLib then
+    -- 库装备没有"装等变化"可言（属性按统一装等折算），
+    -- 换成显示掉落来源——这才是规划时最想知道的信息
+    UI.footTitle:SetText(string.format("%s%s|r  →  %s  |cff888888%s|r",
+      colorHex, name, slotCN, cand.source or "装备库"))
+  else
+    UI.footTitle:SetText(string.format("%s%s|r  →  %s  |cff888888(%d → %d 装等)|r",
+      colorHex, name, slotCN, r.oldIlvl, r.newIlvl))
+  end
 
   local parts = {}
   -- 主属性
@@ -336,9 +522,22 @@ UI.refreshFooter = refreshFooter
 
 -- ── 刷新 ─────────────────────────────────────────────────
 function UI:Refresh()
+  paintTabs()
+  paintSorts()
   UI.snap = NS.Calc.snapshot()
   local snap = UI.snap
   local ctx = snap.ctx
+
+  --[[
+      库里候选按角色当前平均装等折算。
+
+      刻意用**真实**装等而不是模拟后的装等：拿模拟后的值去折算，
+      候选的属性会跟着模拟一起变，换一件涨一次，越换越虚高，
+      最后榜单上全是同一件被反复放大的装备。
+  ]]
+  -- 装等为 0 说明装备还没读出来，拿 334（当前赛季中心档）兜底，
+  -- 否则曲线会在 1 装等处外推出一个荒唐的属性值
+  UI.targetIlvl = (snap.ilvl and snap.ilvl >= 100) and NS.round(snap.ilvl) or 334
 
   -- 有任何一个槽在模拟，就按模拟状态重算"换完之后的面板"
   local hasSim = next(UI.sim) ~= nil

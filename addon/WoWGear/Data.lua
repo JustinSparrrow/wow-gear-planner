@@ -130,6 +130,10 @@ NS.STAT_CN = {
   speed = "加速", leech = "吸血", avoid = "闪避",
 }
 
+-- 单字缩写。候选行里"暴 4755 精 2245"比"暴击 4755 精通 2245"省一半宽度，
+-- 而这一列恰恰是装备库里唯一有信息量的东西（同部位总属性相同，只有配比不同）
+NS.STAT_SHORT = { crit = "暴", haste = "急", mastery = "精", vers = "全" }
+
 -- 主属性按职业定，用来看哪一条要放大显示
 NS.CLASS_PRIMARY = {
   warrior = "str", paladin = nil, hunter = "agi", rogue = "agi",

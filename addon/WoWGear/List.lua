@@ -115,12 +115,12 @@ end
 
 -- ── 右栏：候选列表（可滚动）────────────────────────────
 local candPanel = CreateFrame("Frame", nil, UI.frame)
-candPanel:SetPoint("TOPLEFT", 438, -156)
-candPanel:SetSize(346, 308)
+candPanel:SetPoint("TOPLEFT", 438, -186)
+candPanel:SetSize(346, 276)
 
 local scroll = CreateFrame("ScrollFrame", "WoWGearCandScroll", candPanel, "UIPanelScrollFrameTemplate")
 scroll:SetPoint("TOPLEFT", 0, 0)
-scroll:SetSize(324, 304)
+scroll:SetSize(324, 272)
 
 local content = CreateFrame("Frame", nil, scroll)
 content:SetSize(318, 1)
@@ -176,7 +176,10 @@ local function getRow(i)
   r:SetScript("OnEnter", function(self)
     self:SetBackdropColor(0.19, 0.19, 0.21, 0.95)
     self:SetBackdropBorderColor(0.85, 0.66, 0.25, 0.6)
-    if self.link then
+    if self.item and self.item.fromLib then
+      -- 库物品没有 link，客户端也未必认识这件物品，自己拼 tooltip
+      NS.Lib.tooltip(self.item, self)
+    elseif self.link then
       GameTooltip:SetOwner(self, "ANCHOR_LEFT")
       GameTooltip:SetHyperlink(self.link)
       GameTooltip:Show()
@@ -235,13 +238,33 @@ local function fillRow(r, item, snap, slotKey, sim)
   r.name:SetTextColor(q[1], q[2], q[3], 1)
 
   local subParts = {}
-  subParts[#subParts + 1] = string.format("%d 装等", item.ilvl or 0)
+  if item.fromLib then
+    --[[
+        装备库这一行显示**属性配比**，不是装等。
 
-  if item.otherEquipped then
-    subParts[#subParts + 1] = string.format("|cffff5555已戴在%s|r", item.otherEquipped)
-  end
-  if item.socketHint then
-    subParts[#subParts + 1] = item.socketHint
+        同部位的装备总属性完全相同（护甲恒定 主属性 5259 / 绿字 7000 /
+        耐力 7889），所以装等和总量在这里都是零信息量。真正决定
+        "值不值得换"的是它给的是哪两条属性、各多少——这正是这一行要说的。
+
+        掉落来源放在 tooltip 和底栏：一行里塞"暴4755 精2245"再加个
+        "Temple of Sethraliss · Galvazzt"必然要折行，反而看不清。
+    ]]
+    local mix = {}
+    for _, k in ipairs(NS.SECONDARY) do
+      local v = item.stats and item.stats[k]
+      if v and v > 0 then
+        mix[#mix + 1] = string.format("%s%d", NS.STAT_SHORT[k] or k, v)
+      end
+    end
+    if #mix > 0 then subParts[#subParts + 1] = table.concat(mix, " ") end
+    if not item.curSeason then
+      subParts[#subParts + 1] = "|cff666666旧|r"
+    end
+  else
+    subParts[#subParts + 1] = string.format("%d 装等", item.ilvl or 0)
+    if item.otherEquipped then
+      subParts[#subParts + 1] = string.format("|cffff5555已戴在%s|r", item.otherEquipped)
+    end
   end
   r.sub:SetText(table.concat(subParts, "  "))
 
@@ -255,8 +278,9 @@ local function fillRow(r, item, snap, slotKey, sim)
 
   r.isCurrent = false
   sim = sim or NS.Calc.simulate(snap, slotKey, item)
-  local score = NS.Calc.score(sim)
-  local dIlvl = sim.dIlvl
+  local score = NS.Calc.score(sim, UI.sortBy)
+  -- 库里装备的装等变化没有意义（属性是按统一装等折算的），只给绿字总量
+  local dIlvl = item.fromLib and 0 or sim.dIlvl
 
   local txt = string.format("%s%d", NS.deltaColor(score), score)
   if dIlvl ~= 0 then
@@ -265,6 +289,58 @@ local function fillRow(r, item, snap, slotKey, sim)
   r.delta:SetText(txt)
   r.delta:SetTextColor(NS.deltaColor(score) == "|cff1eff00" and 0.12 or 1,
     NS.deltaColor(score) == "|cff1eff00" and 1 or 0.33, 0.12, 1)
+end
+
+-- ── 候选来源 ─────────────────────────────────────────────
+--[[
+    "我的装备"模式：背包 + 身上那件，属性是客户端给的真值。
+
+    "装备库"模式：从 Lib.lua 按部位取出全部可获得的装备，属性用曲线按统一
+    装等折算。这个列表要缓存——里面每件都要跑一遍曲线插值，而玩家在列表上
+    点来点去时这些数值并不会变，重算是纯浪费。
+]]
+function UI:BuildCandidates(slotDef, bagItems)
+  if UI.mode ~= "lib" then
+    local list = NS.Gear.candidates(UI.selected, UI.snap.gear, bagItems or {})
+    -- 背包模式也吃搜索框：包里有几十件时一样要翻
+    if UI.keyword and UI.keyword ~= "" then
+      local kw = UI.keyword:lower()
+      local kept = {}
+      for _, it in ipairs(list) do
+        if (it.name or ""):lower():find(kw, 1, true) then kept[#kept + 1] = it end
+      end
+      list = kept
+    end
+    return list
+  end
+
+  local snap = UI.snap
+  local key = table.concat({ UI.selected or "", UI.keyword or "",
+                             UI.targetIlvl or 0, snap.ctx.primary or "" }, "|")
+  if UI.libCache and UI.libCache.key == key then
+    return UI.libCache.list
+  end
+
+  local list = {}
+
+  -- 身上那件也放进来打头。装备库模式下没有它的话，玩家看到一堆候选
+  -- 却不知道自己在跟什么比——Δ 是相对身上那件算的，基准得看得见。
+  local cur = snap.gear[UI.selected]
+  if cur then
+    local row = {}
+    for k, v in pairs(cur) do row[k] = v end
+    row.current = true
+    list[1] = row
+  end
+
+  local ids = NS.Lib.search(UI.selected, UI.keyword, snap.ctx.specID)
+  for _, id in ipairs(ids) do
+    local it = NS.Lib.build(id, UI.targetIlvl, snap.ctx.primary)
+    if it then list[#list + 1] = it end
+  end
+
+  UI.libCache = { key = key, list = list }
+  return list
 end
 
 -- ── 刷新两侧 ─────────────────────────────────────────────
@@ -316,23 +392,34 @@ function UI:RefreshLists(bagItems)
   local slotDef = UI.selected and NS.SLOT_BY_KEY[UI.selected]
   local n = 0
   if slotDef then
-    local list = NS.Gear.candidates(UI.selected, snap.gear, bagItems or {})
+    local list = UI:BuildCandidates(slotDef, bagItems)
 
-    -- 排序：当前装备钉在最上面，其余按绿字总量降序
+    -- 排序：当前装备钉在最上面，其余按选中那条属性的差值降序
     -- 每个候选的模拟结果算一次存下来：排序要用，画那一行也要用，
     -- 算两遍纯属浪费，而且两边算出来的东西万一不一致会更难查。
     local scored = {}
     for _, item in ipairs(list) do
       local sim = NS.Calc.simulate(snap, UI.selected, item)
-      scored[#scored + 1] = { item = item, sim = sim, score = NS.Calc.score(sim) }
+      scored[#scored + 1] = { item = item, sim = sim, score = NS.Calc.score(sim, UI.sortBy) }
     end
     table.sort(scored, function(a, b)
+      -- 身上那件永远第一
       if a.item.current ~= b.item.current then return a.item.current end
+      -- 本赛季的排在旧赛季前面：旧赛季装备刷不到了，属性再好也没用
+      if (a.item.fromLib and a.item.curSeason) ~= (b.item.fromLib and b.item.curSeason) then
+        return (a.item.fromLib and a.item.curSeason) and true or false
+      end
       if a.score ~= b.score then return a.score > b.score end
       return (a.item.ilvl or 0) > (b.item.ilvl or 0)
     end)
 
-    UI.rightHead:SetText(string.format("候选装备 · %s", slotDef.cn))
+    -- 把"折算装等"讲清楚：不然玩家会以为库里 298 装等那件和身上 334 是一回事
+    if UI.mode == "lib" then
+      UI.rightSub:SetText(string.format("|cff888888%s %d 件 · 按 %d 装等折算|r",
+        slotDef.cn, #scored, UI.targetIlvl or 0))
+    else
+      UI.rightSub:SetText(string.format("|cff888888%s %d 件|r", slotDef.cn, #scored))
+    end
 
     n = #scored
     for i = 1, n do
@@ -341,7 +428,7 @@ function UI:RefreshLists(bagItems)
       fillRow(r, scored[i].item, snap, UI.selected, scored[i].sim)
     end
   else
-    UI.rightHead:SetText("候选装备")
+    UI.rightSub:SetText("")
   end
 
   for i = n + 1, #rows do rows[i]:Hide() end

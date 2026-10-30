@@ -321,21 +321,27 @@ function NS.Calc.simulate(snap, slotKey, cand)
 end
 
 --[[
-    一次性给某个槽位的所有候选算好，按"总提升"排序。
+    排序用的分数。
 
-    排序权重用的是**属性点数之和**（四项绿字直接相加），不是 DPS。
-    这是插件能做到的上限：没有模拟器就算不出 DPS，而拿权重猜出来的
-    "评分"比不排序更坑人——玩家会照着它选。所以这列叫「绿字总量」，
-    只做粗筛，真正的强弱还是要看 simc。
+    ── 为什么不能按"绿字总量"排 ────────────────────────────
+    查过全库的分配权重：同部位的每件装备，总属性**完全一样**
+    （护甲恒定 主属性 5259 / 绿字 7000 / 耐力 7889），差别只在配比。
+    这是暴雪的预算制设计——一件头和另一件头的总预算相同，
+    只是一个给暴击精通、一个给急速全能。
 
-    想按自己的权重排的话，NS.Calc.WEIGHTS 可以改。
+    所以按总量排序永远得到 0，等于没排。真正要回答的是
+    "这件给的是不是我需要的那条属性"，那就必须按单条属性排。
+
+    key 传具体属性代号（crit/haste/mastery/vers）时，返回那条属性的**差值**。
+    差值而不是绝对值，是因为玩家关心的是"换上之后多多少"。
 ]]
-NS.Calc.WEIGHTS = { crit = 1, haste = 1, mastery = 1, vers = 1 }
-
-function NS.Calc.score(sim)
+function NS.Calc.score(sim, key)
+  if key and key ~= "total" then
+    return sim.dStat[key] or 0
+  end
   local s = 0
   for _, k in ipairs(NS.SECONDARY) do
-    s = s + (sim.dStat[k] or 0) * (NS.Calc.WEIGHTS[k] or 1)
+    s = s + (sim.dStat[k] or 0)
   end
   return s
 end

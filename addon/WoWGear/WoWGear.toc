@@ -8,16 +8,20 @@
 ## X-Website: https://github.com/JustinSparrrow/wow-gear-planner
 
 # 加载顺序有依赖，不要调换：
-#   Data  静态表（槽位/曲线/专精系数）
-#   Util  格式化 + 物品读取缓存（依赖 Data 的 MOD 表）
-#   Gear  采集（依赖 Util.Item）
-#   Calc  计算（依赖 Data 的曲线 + Gear 的槽位序）
-#   UI    主窗口（依赖 Calc）
-#   List  两个列表（依赖 UI 的 frame）
+#   Data   静态表（槽位/曲线/专精系数）
+#   Lib    装备库数据（自动生成，443KB，3570 件）
+#   Util   格式化 + 物品读取缓存（依赖 Data 的 MOD 表）
+#   Curve  装等曲线 + 库物品取数（依赖 Lib 的数据和 Util.round）
+#   Gear   采集（依赖 Util.Item）
+#   Calc   计算（依赖 Data 的曲线 + Gear 的槽位序）
+#   UI     主窗口（依赖 Calc）
+#   List   两个列表（依赖 UI 的 frame）
 #   Export 导出子窗口（依赖 UI.button/skin）
-#   Core  事件与命令（放最后，前面都定义好了才能接事件）
+#   Core   事件与命令（放最后，前面都定义好了才能接事件）
 Data.lua
+Lib.lua
 Util.lua
+Curve.lua
 Gear.lua
 Calc.lua
 UI.lua
