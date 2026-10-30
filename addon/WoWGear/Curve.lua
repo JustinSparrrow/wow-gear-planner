@@ -328,6 +328,38 @@ local function ensureIndex()
 end
 
 -- 这个槽位在库里有多少件（切换 tab 时显示"库 116"用）
+--[[
+    当前部位搜不到时，看看别的部位有没有。
+
+    搜索是按部位来的（右栏只列这个部位的候选），但玩家不一定记得那件装备
+    是哪个部位——"阿曼尼"这个名字，可能是披巾、可能是弓、也可能是指环。
+    搜出来一片空白，他不会想到"是部位选得不对"，只会觉得搜索没用。
+
+    返回 {{槽位, 件数}, ...}，按件数降序；没有就返回 nil。
+]]
+function Lib.searchOther(slotKey, keyword, specID)
+  ensureIndex()
+  local words = Lib.words(keyword)
+  if #words == 0 then return nil end
+
+  local family = slotKey:gsub("%d+$", "")
+  local out = {}
+  for fam, list in pairs(bySlot) do
+    if fam ~= family then
+      local n = 0
+      for _, id in ipairs(list) do
+        if Lib.allowed(id, specID) and Lib.matches(id, words) then
+          n = n + 1
+        end
+      end
+      if n > 0 then out[#out + 1] = { fam, n } end
+    end
+  end
+
+  table.sort(out, function(a, b) return a[2] > b[2] end)
+  return #out > 0 and out or nil
+end
+
 function Lib.countFor(slotKey, specID)
   ensureIndex()
   local family = slotKey:gsub("%d+$", "")
@@ -346,19 +378,62 @@ end
     用 plain find 不用模式匹配：玩家搜「之牙」这种带特殊字符的名字时，
     gsub/find 的模式语法会把 `-` `.` `(` 当成元字符，搜不出东西还不知道为什么。
 ]]
+--[[
+    一件装备是否匹配关键词（words 是已经拆好的小写词表）。
+
+    匹配三样东西：
+
+      装备名    "信徒的流丝罩袍"
+      掉落来源  "塞塔里斯神庙 · 加瓦兹特"
+      物品 ID   "158366"
+
+    为什么非要匹配来源：玩家脑子里记的是"我要去塞塔里斯神庙刷那个戒指"，
+    不会去记那个戒指叫「信徒的流丝罩袍」。只匹配装备名的话，
+    这类需求只能靠一件件翻列表——而规划恰恰是从"我想要什么"出发的，
+    不是从"它叫什么"出发的。
+
+    多个词用空格分开、要**全部命中**："神庙 戒指"能把范围缩到几件。
+    这个用法比"整串模糊匹配"有用得多，因为名字是"塞塔里斯神庙 · 加瓦兹特"
+    这种带分隔符的长串，玩家不会一字不差地打。
+]]
+function Lib.matches(id, words)
+  if not words or #words == 0 then return true end
+  local raw = NS.LIB[id]
+  if not raw then return false end
+
+  local name = (raw[1] or ""):lower()
+  local src = (NS.LIB_SRC[id] or ""):lower()
+  local idStr = tostring(id)
+
+  for i = 1, #words do
+    local w = words[i]
+    if not (name:find(w, 1, true) or src:find(w, 1, true)
+            or idStr:find(w, 1, true)) then
+      return false
+    end
+  end
+  return true
+end
+
+-- 拆词：空格分隔，全部转小写（中文不受影响，英文大小写不敏感）
+function Lib.words(keyword)
+  local out = {}
+  for w in ((keyword or ""):lower():gsub("　", " ")):gmatch("%S+") do
+    out[#out + 1] = w
+  end
+  return out
+end
+
 function Lib.search(slotKey, keyword, specID)
   ensureIndex()
   local family = slotKey:gsub("%d+$", "")
   local list = bySlot[family] or {}
-  local kw = (keyword or ""):lower()
+  local words = Lib.words(keyword)
 
   local out = {}
   for _, id in ipairs(list) do
-    local raw = NS.LIB[id]
-    if Lib.allowed(id, specID) then
-      if kw == "" or raw[1]:lower():find(kw, 1, true) then
-        out[#out + 1] = id
-      end
+    if Lib.allowed(id, specID) and Lib.matches(id, words) then
+      out[#out + 1] = id
     end
   end
   return out

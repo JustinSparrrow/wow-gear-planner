@@ -33,6 +33,8 @@ data/raw/*
 !data/raw/rating_curves.json
 !data/raw/class_base.json
 !data/raw/names_zhcn.json
+# 副本/首领中英对照：没有它，导出的掉落来源是英文，中文搜副本搜不到
+!data/raw/instances_zhcn.json
 !data/raw/permanent-enchant.inc
 
 # 临时

@@ -103,6 +103,20 @@ def clean(s):
     return s.replace(",", "，")
 
 
+def load_name_map():
+    """英文名 -> 中文名。没有这个文件就退化成全英文，不影响导出。"""
+    path = os.path.join(ROOT, "data", "raw", "instances_zhcn.json")
+    if not os.path.exists(path):
+        print("  提示：没有 instances_zhcn.json，掉落来源保持英文")
+        print("        要中文就运行：python src/build/fetch_instances.py")
+        return {}
+    with io.open(path, encoding="utf-8") as f:
+        d = json.load(f)
+    m = dict(d.get("pairs") or {})
+    m.update(d.get("manual") or {})
+    return m
+
+
 def load_curve():
     rows = []
     with io.open(CURVE, encoding="utf-8-sig") as f:
@@ -157,16 +171,25 @@ def main():
         stats.setdefault(r["item_id"], {})[r["stat_id"]] = r["alloc"]
 
     # 来源：优先取副本名 + boss 名，同一个 item 可能有多条（普通/大秘境），取第一条
+    #
+    # 这里顺手把英文翻成中文。玩家对副本的中文名有印象（界面、攻略、集合石
+    # 都是中文），对 "Temple of Sethraliss" 没有——而且搜索只匹配来源，
+    # 不翻的话中文搜副本一个字都搜不到。
+    name_map = load_name_map()
     sources = {}
     for r in conn.execute("""SELECT item_id, instance_name, encounter_name
                              FROM item_sources ORDER BY item_id"""):
         if r["item_id"] not in sources:
             inst = r["instance_name"] or ""
             enc = r["encounter_name"] or ""
+            inst_cn = name_map.get(inst, inst)
+            enc_cn = name_map.get(enc, enc)
+            # "同名的当成没填"这条判断要用英文原文——
+            # 翻译后可能碰巧一样，但那不是同一条数据
             if inst and enc and enc != inst:
-                sources[r["item_id"]] = f"{inst} · {enc}"
+                sources[r["item_id"]] = f"{inst_cn} · {enc_cn}"
             else:
-                sources[r["item_id"]] = inst or enc
+                sources[r["item_id"]] = inst_cn or enc_cn
 
     sql = """SELECT id, name, name_cn, quality, slot, raw_ilevel, specs,
                     inventory_type, is_current
@@ -256,6 +279,8 @@ def main():
     out.append("    （59/108/197/298），各按各的比只会得出「装等低的就是差」。")
     out.append("")
     out.append("    来源和专精限制存的是下面两张索引表的下标，0 表示没有。")
+    out.append("    来源已经译成中文（由 src/build/fetch_instances.py 提供对照表），")
+    out.append("    因为搜索只匹配装备名和来源，英文名中文玩家根本想不起来。")
     out.append("]]")
     out.append("")
     out.append("local ADDON, NS = ...")

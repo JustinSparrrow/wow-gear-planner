@@ -339,7 +339,23 @@ local aPending = false
 search:SetScript("OnTextChanged", function(self, userInput)
   local t = self:GetText() or ""
   searchHint:SetShown(t == "")
-  if not userInput then return end
+
+  --[[
+      **这里不能只处理 userInput。**
+
+      WoW 的 EditBox 在中文输入法"确认候选词"那一下，OnTextChanged 的
+      userInput 是 **false** —— 文字不是逐字符敲进去的，而是输入法一次性
+      设进去的。原来这里 `if not userInput then return end` 直接返回，
+      于是 UI.keyword 停在确认前的拼音 "a man ni"，而输入框里已经是
+      "阿曼尼"。
+
+      表现就是"搜索只认英文/拼音，中文怎么打都搜不到"，
+      而且提示词里明晃晃写着拼音，看着像插件不认识中文。
+      其实中文一点问题没有，是这一行把确认动作吞了。
+
+      顺带：既然要无条件同步，刷新也得无条件触发，
+      否则输入法确认后列表不会重新筛。
+  ]]
   UI.keyword = t
   if aPending then return end
   aPending = true

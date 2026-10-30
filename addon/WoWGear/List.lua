@@ -319,14 +319,30 @@ end
 function UI:BuildCandidates(slotDef, bagItems)
   if UI.mode ~= "lib" then
     local list = NS.Gear.candidates(UI.selected, UI.snap.gear, bagItems or {})
-    -- 背包模式也吃搜索框：包里有几十件时一样要翻
-    if UI.keyword and UI.keyword ~= "" then
-      local kw = UI.keyword:lower()
+    -- 背包模式也吃搜索框：包里有几十件时一样要翻。
+    -- 匹配规则跟装备库一致（名字 / 来源 / 物品 ID，多词全部命中），
+    -- 免得同一个框在两个模式下行为不一样
+    local words = NS.Lib.words(UI.keyword)
+    if #words > 0 then
       local kept = {}
       for _, it in ipairs(list) do
-        if (it.name or ""):lower():find(kw, 1, true) then kept[#kept + 1] = it end
+        local name = (it.name or ""):lower()
+        local src = (it.id and NS.LIB_SRC[it.id] or ""):lower()
+        local idStr = tostring(it.id or "")
+        local ok = true
+        for _, w in ipairs(words) do
+          if not (name:find(w, 1, true) or src:find(w, 1, true)
+                  or idStr:find(w, 1, true)) then
+            ok = false
+            break
+          end
+        end
+        if ok then kept[#kept + 1] = it end
       end
       list = kept
+      UI.bagHits = #kept
+    else
+      UI.bagHits = #list
     end
     UI.libHits = nil
     return list
@@ -491,11 +507,30 @@ function UI:RefreshLists(bagItems)
     elseif UI.mode == "lib" and not NS.LIB then
       emptyHint:SetText("装备库没加载（Lib.lua 不在插件目录里）")
     elseif UI.mode == "lib" and UI.keyword and UI.keyword ~= "" then
-      emptyHint:SetText(string.format("库里没有名字含「%s」的%s，按 ESC 清空搜索", UI.keyword, slotDef.cn))
+      -- 搜索是按部位来的，但玩家不一定记得那件装备属于哪个部位。
+      -- 别的部位有货就把话说清楚，否则他看到空白只会以为搜索坏了。
+      local other = NS.Lib.searchOther(UI.selected, UI.keyword, UI.snap.ctx.specID)
+      if other then
+        local parts = {}
+        for i = 1, math.min(#other, 3) do
+          local def = NS.SLOT_BY_KEY[other[i][1]]
+          parts[#parts + 1] = string.format("%s %d", def and def.cn or other[i][1], other[i][2])
+        end
+        emptyHint:SetText(string.format(
+          "%s没有「%s」。其他部位有：%s", slotDef.cn, UI.keyword,
+          table.concat(parts, "、")))
+      else
+        emptyHint:SetText(string.format("没有匹配「%s」的%s。可以搜装备名、副本名或物品 ID，按 ESC 清空",
+          UI.keyword, slotDef.cn))
+      end
     elseif UI.mode == "lib" then
       emptyHint:SetText(string.format("库里没有本专精能用的%s", slotDef.cn))
     else
-      emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
+      if UI.keyword and UI.keyword ~= "" then
+        emptyHint:SetText(string.format("背包里没有匹配「%s」的%s，按 ESC 清空搜索", UI.keyword, slotDef.cn))
+      else
+        emptyHint:SetText(string.format("背包里没有可换的%s", slotDef.cn))
+      end
     end
     emptyHint:Show()
   else

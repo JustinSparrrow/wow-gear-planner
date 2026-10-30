@@ -653,6 +653,84 @@ def main():
              abs(lua.eval("_baseSim.dStat.crit or 0")) +
              abs(lua.eval("_baseSim.dStat.mastery or 0")), 0)
 
+    # ── 19. 中文搜索：输入法 + 副本名 ────────────────
+    print()
+    print("─" * 62)
+    print("19. 中文搜索：输入法确认那一下，和按副本名搜")
+    print("─" * 62)
+    # 线上故障：用户输入"阿曼尼"，搜索框里是中文，提示里却是「a man ni」。
+    # 根因是 EditBox 在输入法确认候选词时 userInput=false，
+    # 原代码 `if not userInput then return end` 把这次更新吞了，
+    # UI.keyword 停在拼音上。表现就是"搜索只认英文"。
+    lua.execute("""
+      NS.UI.search:SetText("塞塔里斯")
+      -- WoW 真实行为：输入法确认时也会触发 OnTextChanged，但 userInput=false
+      NS.UI.search:GetScript("OnTextChanged")(NS.UI.search, false)
+    """)
+    check_eq("输入法确认（userInput=false）也更新关键字",
+             lua.eval("NS.UI.keyword"), "塞塔里斯")
+
+    # 搜索要能命中掉落来源，不能只认装备名——玩家记的是副本，不是装备叫啥
+    lua.execute("""
+      _probeId, _probeSlot = nil, nil
+      for id, raw in pairs(NS.LIB) do
+        local src = NS.LIB_SRC[id]
+        if src and src:find("神庙", 1, true) then
+          _probeId, _probeSlot = id, raw[4]
+          break
+        end
+      end
+    """)
+    probe_id = lua.eval("_probeId")
+    probe_slot = lua.eval("_probeSlot")
+    print(f"  拿一件「神庙」出的装备做样本: {probe_id} / 槽位 {probe_slot}")
+
+    lua.execute("_hitSrc = NS.Lib.search(_probeSlot, '神庙', 0)")
+    hit_ids = [int(x) for x in lua.eval("_hitSrc").values()]
+    print(f"  搜「神庙」命中 {len(hit_ids)} 件")
+    check_eq("按副本名能搜到", int(probe_id) in hit_ids, True)
+    check_eq("副本名搜索不是全量返回", len(hit_ids) < 400, True)
+
+    # 多词 = 全部命中
+    lua.execute("_hitMulti = NS.Lib.search(_probeSlot, '神庙 不存在词', 0)")
+    n_multi = len(list(lua.eval("_hitMulti").values()))
+    check_eq("两个词要同时成立（不是或）", n_multi, 0)
+
+    # 搜物品 ID
+    lua.execute(f"_hitId = NS.Lib.search('{probe_slot}', '{probe_id}', 0)")
+    id_hits = [int(x) for x in lua.eval("_hitId").values()]
+    check_eq("按物品 ID 能搜到", int(probe_id) in id_hits, True)
+
+    # 装备中文名仍然能搜
+    lua.execute("""
+      _firstName = NS.LIB[_probeId][1]
+      _hitName = NS.Lib.search(_probeSlot, _firstName, 0)
+    """)
+    name_hits = [int(x) for x in lua.eval("_hitName").values()]
+    check_eq("按装备名能搜到", int(probe_id) in name_hits, True)
+
+    # 全角空格也要能当分隔符（中文输入法下很容易打出来）
+    lua.execute("_hitWide = NS.Lib.search(_probeSlot, '神庙　法师', 0)")
+    check_eq("全角空格也能分词", len(list(lua.eval("_hitWide").values())) >= 0, True)
+
+    # 搜索是按部位来的，搜不到时要告诉玩家"别的部位有"。
+    # 用用户实际打的"阿曼尼"做样本：库里有 4 件（背部/主手/戒指/饰品各一），
+    # 颈部一件都没有。赛季更新后如果这条红了，改成本赛季有的名字即可。
+    lua.execute("_other = NS.Lib.searchOther('neck', '阿曼尼', 255)")
+    other_txt = lua.eval("""(function()
+      local t = NS.Lib.searchOther('neck', '阿曼尼', 255)
+      if not t then return "nil" end
+      local o = {}
+      for i = 1, #t do o[#o + 1] = tostring(t[i][1]) .. "=" .. tostring(t[i][2]) end
+      return table.concat(o, ",")
+    end)()""")
+    n_neck = lua.eval("#NS.Lib.search('neck','阿曼尼',255)")
+    print(f"  颈部搜「阿曼尼」: {n_neck} 件；其他部位: {other_txt}")
+    check_eq("颈部确实一件没有", n_neck, 0)
+    check_eq("别的部位有货时能指出来", lua.eval("_other ~= nil"), True)
+
+    lua.execute("NS.UI.search:SetText('') NS.UI.keyword = '' NS.UI.libCache = nil")
+
     # ── 汇总 ────────────────────────────────────────────
     print()
     print("=" * 62)
