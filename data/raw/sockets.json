@@ -1,0 +1,292 @@
+{
+ "158366": {
+  "count": 0,
+  "name": "Charged Sandstone Band",
+  "type": ""
+ },
+ "159459": {
+  "count": 0,
+  "name": "Ritual Binder's Ring",
+  "type": ""
+ },
+ "162544": {
+  "count": 0,
+  "name": "Jade Ophidian Band",
+  "type": ""
+ },
+ "240947": {
+  "count": 1,
+  "name": "Gleaming Copper Band",
+  "type": "PRISMATIC"
+ },
+ "240948": {
+  "count": 1,
+  "name": "Nocturnal Charm",
+  "type": "PRISMATIC"
+ },
+ "240949": {
+  "count": 1,
+  "name": "Masterwork Sin'dorei Band",
+  "type": "PRISMATIC"
+ },
+ "240950": {
+  "count": 1,
+  "name": "Masterwork Sin'dorei Amulet",
+  "type": "PRISMATIC"
+ },
+ "240951": {
+  "count": 1,
+  "name": "Thalassian Competitor's Signet",
+  "type": "PRISMATIC"
+ },
+ "240952": {
+  "count": 1,
+  "name": "Thalassian Competitor's Amulet",
+  "type": "PRISMATIC"
+ },
+ "241139": {
+  "count": 1,
+  "name": "Thalassian Phoenix Torque",
+  "type": "PRISMATIC"
+ },
+ "241140": {
+  "count": 1,
+  "name": "Signet of Azerothian Blessings",
+  "type": "PRISMATIC"
+ },
+ "251073": {
+  "count": 1,
+  "name": "Voidstone Shielding Array",
+  "type": "PRISMATIC"
+ },
+ "251093": {
+  "count": 0,
+  "name": "Omission of Light",
+  "type": ""
+ },
+ "251096": {
+  "count": 0,
+  "name": "Pendant of Aching Grief",
+  "type": ""
+ },
+ "251115": {
+  "count": 0,
+  "name": "Bifurcation Band",
+  "type": ""
+ },
+ "251136": {
+  "count": 0,
+  "name": "Signet of Snarling Servitude",
+  "type": ""
+ },
+ "251142": {
+  "count": 0,
+  "name": "Pendant of Malefic Fury",
+  "type": ""
+ },
+ "251148": {
+  "count": 0,
+  "name": "Pilfered Precious Band",
+  "type": ""
+ },
+ "251173": {
+  "count": 0,
+  "name": "Yoke of the Charging Bear",
+  "type": ""
+ },
+ "251194": {
+  "count": 0,
+  "name": "Lightwarden's Bind",
+  "type": ""
+ },
+ "251217": {
+  "count": 0,
+  "name": "Occlusion of Void",
+  "type": ""
+ },
+ "251234": {
+  "count": 0,
+  "name": "Graft of the Domanaar",
+  "type": ""
+ },
+ "251513": {
+  "count": 1,
+  "name": "Loa Worshiper's Band",
+  "type": "PRISMATIC"
+ },
+ "252258": {
+  "count": 0,
+  "name": "Sickening Signet of Atroxus",
+  "type": ""
+ },
+ "268249": {
+  "count": 0,
+  "name": "Vile Alchemist's Band",
+  "type": ""
+ },
+ "268250": {
+  "count": 0,
+  "name": "Sentinel's Vitriolic Chain",
+  "type": ""
+ },
+ "268251": {
+  "count": 0,
+  "name": "Amulet of the Twin Fangs",
+  "type": ""
+ },
+ "268252": {
+  "count": 0,
+  "name": "Apex Brute's Claw Ring",
+  "type": ""
+ },
+ "268265": {
+  "count": 1,
+  "name": "Aqirbane Reliquary",
+  "type": "PRISMATIC"
+ },
+ "268266": {
+  "count": 0,
+  "name": "Alluring Bubbleband",
+  "type": ""
+ },
+ "270532": {
+  "count": 1,
+  "name": "Venomous Aspirant's Pendant",
+  "type": "PRISMATIC"
+ },
+ "270533": {
+  "count": 1,
+  "name": "Venomous Aspirant's Choker",
+  "type": "PRISMATIC"
+ },
+ "270534": {
+  "count": 1,
+  "name": "Venomous Aspirant's Necklace",
+  "type": "PRISMATIC"
+ },
+ "270535": {
+  "count": 1,
+  "name": "Venomous Aspirant's Signet",
+  "type": "PRISMATIC"
+ },
+ "270536": {
+  "count": 1,
+  "name": "Venomous Aspirant's Band",
+  "type": "PRISMATIC"
+ },
+ "270537": {
+  "count": 1,
+  "name": "Venomous Aspirant's Ring",
+  "type": "PRISMATIC"
+ },
+ "270575": {
+  "count": 1,
+  "name": "Venomous Gladiator's Ring",
+  "type": "PRISMATIC"
+ },
+ "270576": {
+  "count": 1,
+  "name": "Venomous Gladiator's Band",
+  "type": "PRISMATIC"
+ },
+ "270577": {
+  "count": 1,
+  "name": "Venomous Gladiator's Signet",
+  "type": "PRISMATIC"
+ },
+ "270587": {
+  "count": 1,
+  "name": "Venomous Gladiator's Necklace",
+  "type": "PRISMATIC"
+ },
+ "270588": {
+  "count": 1,
+  "name": "Venomous Gladiator's Pendant",
+  "type": "PRISMATIC"
+ },
+ "270589": {
+  "count": 1,
+  "name": "Venomous Gladiator's Amulet",
+  "type": "PRISMATIC"
+ },
+ "271638": {
+  "count": 0,
+  "name": "Bound Serpent's Jade Eye",
+  "type": ""
+ },
+ "272147": {
+  "count": 0,
+  "name": "Colubrine Band",
+  "type": ""
+ },
+ "272148": {
+  "count": 0,
+  "name": "Anguine Gyre",
+  "type": ""
+ },
+ "272149": {
+  "count": 0,
+  "name": "Hex Loop",
+  "type": ""
+ },
+ "272150": {
+  "count": 0,
+  "name": "Ouroboric Signet",
+  "type": ""
+ },
+ "272228": {
+  "count": 0,
+  "name": "Whispering Periapt",
+  "type": ""
+ },
+ "272229": {
+  "count": 0,
+  "name": "Serpentine Talisman",
+  "type": ""
+ },
+ "273781": {
+  "count": 0,
+  "name": "Strand of Warding Fangs",
+  "type": ""
+ },
+ "273792": {
+  "count": 0,
+  "name": "Band of the Amani Warlord",
+  "type": ""
+ },
+ "275526": {
+  "count": 0,
+  "name": "Preyhunter's Band",
+  "type": ""
+ },
+ "275527": {
+  "count": 0,
+  "name": "Preyhunter's Signet",
+  "type": ""
+ },
+ "275528": {
+  "count": 0,
+  "name": "Preyhunter's Ring",
+  "type": ""
+ },
+ "275529": {
+  "count": 0,
+  "name": "Preyhunter's Circle",
+  "type": ""
+ },
+ "275530": {
+  "count": 0,
+  "name": "Preyhunter's Clasp",
+  "type": ""
+ },
+ "275531": {
+  "count": 0,
+  "name": "Preyhunter's Choker",
+  "type": ""
+ },
+ "281029": {
+  "count": 0,
+  "name": "Band of the Swarmcaller",
+  "type": ""
+ }
+}

@@ -1,0 +1,34 @@
+{
+  "_note": "每个专精「装备之外」的固定绿字百分比（天赋 + 职业/专精被动）。公式：面板% = 递减后评级/分母 + 基线。分母来自客户端 __combat_ratings（暴击 46 / 急速 44 / 全能 54 / 精通 46），基线是这张表。精通那列已经乘过专精系数（即面板上直接看到的百分比），所以和其他三列同单位。",
+  "_source": "先用真实角色游戏面板反推：基线 = 面板% − (递减后评级 / 分母)。同一专精换装备后反推出的基线必须不变，这是判定数据可信的门槛——已验证生存猎两套装备漂移 ≤0.002（面板两位小数的舍入极限）。",
+  "_caveat": "单人单次采样，若采样时带临时 buff 会污染。已标注 confidence 低的项需要复核。默认值只做「没填面板」时的兜底，玩家填了面板就以面板为准。",
+  "level": 90,
+  "build": "12.1.5.70575",
+  "specs": {
+    "hunter:beast_mastery": {
+      "crit": 15.0, "haste": 2.06, "mastery": 20.9, "vers": 0.0,
+      "source": "panel", "confidence": "high",
+      "note": "三个猎人的暴击都是 15，是职业天赋；精通多出 3 点（11 vs 基础 8）"
+    },
+    "hunter:marksmanship": {
+      "crit": 15.0, "haste": 4.31, "mastery": 5.0, "vers": -0.55,
+      "source": "panel", "confidence": "medium",
+      "note": "精通正好 8 点 = 客户端基础值，说明这条没吃额外精通天赋；全能 -0.55 反常，疑采样时有 buff"
+    },
+    "hunter:survival": {
+      "crit": 15.0, "haste": 2.04, "mastery": 11.9, "vers": -1.0,
+      "source": "panel", "confidence": "high",
+      "note": "两套装备交叉验证，四项漂移 ≤0.002；精通 14 点（+6 天赋）；全能 -1.00 反常但两套一致"
+    },
+    "rogue:subtlety": {
+      "crit": 12.0, "haste": 4.87, "mastery": 19.6, "vers": 0.0,
+      "source": "panel", "confidence": "high",
+      "note": "精通正好 8 点 = 客户端基础值"
+    },
+    "druid:guardian": {
+      "crit": 10.0, "haste": 1.29, "mastery": 8.15, "vers": 12.0,
+      "source": "panel", "confidence": "low",
+      "note": "全能 +12 是守护德标志性被动。精通按库里记录的系数 1.0 算（面板显示的是「攻击强度提高 x%」那条，不是表里的 0.7），其中 8 点是客户端基础精通点数，剩下的 0.15 才是天赋残差——待游戏内核一次"
+    }
+  }
+}

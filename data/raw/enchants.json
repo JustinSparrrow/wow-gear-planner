@@ -1,0 +1,575 @@
+{
+ "7935": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 240133,
+  "name": "Sunfire Silk Spellthread",
+  "name_cn": "阳炎丝绸魔线",
+  "note": "另有法力加成不计入",
+  "slot": "legs",
+  "stats": {
+   "int": 33,
+   "sta": 92
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "7937": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 240155,
+  "name": "Arcanoweave Spellthread",
+  "name_cn": "奥纹魔线",
+  "note": "另有法力加成不计入",
+  "slot": "legs",
+  "stats": {
+   "int": 33
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "7939": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 240157,
+  "name": "Bright Linen Spellthread",
+  "name_cn": "光明亚麻魔线",
+  "note": "",
+  "slot": "legs",
+  "stats": {
+   "int": 19
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "7957": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243946,
+  "name": "Enchant Chest - Mark of Nalorakk",
+  "note": "",
+  "slot": "chest",
+  "stats": {
+   "sta": 93,
+   "str": 32
+  },
+  "tertiary": {},
+  "text": "Enchant Chest - Mark of Nalorakk Item Level 80 Use: Permanently enchants chest armor with Mark of Nalorakk, increasing Strength by 32 and Stamina by 93. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7959": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243948,
+  "name": "Enchant Helm - Hex of Leeching",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "leech": 22
+  },
+  "text": "Enchant Helm - Hex of Leeching Item Level 80 Use: Permanently enchants helm armor with Hex of Leeching, increasing Leech by 22. Cannot be applied to items lower than level 120. Amani Augments - Berserker Brawn Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7961": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243950,
+  "name": "Enchant Helm - Empowered Hex of Leeching",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "leech": 44
+  },
+  "text": "Enchant Helm - Empowered Hex of Leeching Item Level 80 Use: Permanently enchants helm armor with Empowered Hex of Leeching, increasing Leech by 44. Also heals you for 2% Health whenever you defeat a foe outdoors in a Midnight zone once per 5 sec. Cannot be applied to items lower than level 120. Amani Augments - Berserker Brawn Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7963": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243952,
+  "name": "Enchant Boots - Lynx's Dexterity",
+  "note": "",
+  "slot": "feet",
+  "stats": {
+   "sta": 186
+  },
+  "tertiary": {
+   "avoid": 15
+  },
+  "text": "Enchant Boots - Lynx's Dexterity Item Level 80 Use: Permanently enchants boots with Lynx's Dexterity, increasing Avoidance by 15 and Stamina by 186. Cannot be applied to items lower than level 120. Amani Augments - Berserker Brawn Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7965": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243954,
+  "name": "Enchant Ring - Amani Mastery",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "mastery": 22
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Amani Mastery Item Level 80 Use: Permanently enchants a ring with Amani Mastery, increasing Mastery by 22. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "7967": {
+  "desc": "暴击效果 +1%",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243956,
+  "name": "Enchant Ring - Eyes of the Eagle",
+  "note": "暴击效果 +1%",
+  "slot": "finger",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Ring - Eyes of the Eagle Item Level 80 Use: Permanently enchants a ring with Eyes of the Eagle, increasing critical strike effectiveness by 1%. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "7969": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243958,
+  "name": "Enchant Ring - Zul'jin's Mastery",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "mastery": 27
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Zul'jin's Mastery Item Level 80 Use: Permanently enchants a ring with Zul'jin's Mastery, increasing Mastery by 27. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "7971": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243960,
+  "name": "Enchant Shoulders - Flight of the Eagle",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "speed": 26
+  },
+  "text": "Enchant Shoulders - Flight of the Eagle Item Level 80 Use: Permanently enchants shoulder armor with Flight of the Eagle, increasing Speed by 26. Cannot be applied to items lower than level 120. Amani Augments - Berserker Brawn Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7973": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243962,
+  "name": "Enchant Shoulders - Akil'zon's Swiftness",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "speed": 52
+  },
+  "text": "Enchant Shoulders - Akil'zon's Swiftness Item Level 80 Use: Permanently enchants shoulder armor with Akil'zon's Swiftness, increasing Speed by 52. Cannot be applied to items lower than level 120. Amani Augments - Berserker Brawn Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7979": {
+  "desc": "触发：流血伤害",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 243968,
+  "name": "Enchant Weapon - Strength of Halazzi",
+  "note": "",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Strength of Halazzi Item Level 80 Use: Permanently enchants a weapon with Strength of Halazzi, causing your damage to sometimes call upon the loa to slash your target, causing them to bleed for ( 1 * 1533) damage over 18 sec. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7981": {
+  "desc": "触发：暴击 +99，持续 15 秒",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 243970,
+  "name": "Enchant Weapon - Jan'alai's Precision",
+  "note": "触发：暴击 +99，持续 15 秒",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Jan'alai's Precision Item Level 80 Use: Permanently enchants a weapon with Jan'alai's Precision, causing your spells and abilities to sometimes grant you Precision of the Dragonhawk, increasing your Critical Strike by 99 for 15 sec. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7983": {
+  "desc": "触发：急速 +99，持续 15 秒",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 243972,
+  "name": "Enchant Weapon - Berserker's Rage",
+  "note": "触发：急速 +99，持续 15 秒",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Berserker's Rage Item Level 80 Use: Permanently enchants a weapon with Berserker's Rage, causing your spells and abilities to grant you Frenzied Focus, increasing your Haste by 99 for 15 sec. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7985": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243974,
+  "name": "Enchant Chest - Mark of the Rootwarden",
+  "note": "",
+  "slot": "chest",
+  "stats": {
+   "agi": 32
+  },
+  "tertiary": {
+   "speed": 12
+  },
+  "text": "Enchant Chest - Mark of the Rootwarden Item Level 80 Use: Permanently enchants chest armor with Mark of the Rootwarden, increasing Agility by 32 and Speed by 12. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7987": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243976,
+  "name": "Enchant Chest - Mark of the Worldsoul",
+  "note": "",
+  "slot": "chest",
+  "stats": {
+   "main": 36
+  },
+  "tertiary": {},
+  "text": "Enchant Chest - Mark of the Worldsoul Item Level 80 Use: Permanently enchants chest armor with Mark of the Worldsoul, increasing your Primary stat by 36. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7989": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243978,
+  "name": "Enchant Helm - Blessing of Speed",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "speed": 9
+  },
+  "text": "Enchant Helm - Blessing of Speed Item Level 80 Use: Permanently enchants helm armor with Blessing of Speed, increasing Speed by 9. Cannot be applied to items lower than level 120. Haranir Heightening - Worldsoul Wards Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7991": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243980,
+  "name": "Enchant Helm - Empowered Blessing of Speed",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "speed": 17
+  },
+  "text": "Enchant Helm - Empowered Blessing of Speed Item Level 80 Use: Permanently enchants helm armor with Empowered Blessing of Speed, increasing Speed by 17. Also grants you 1 charge of skyriding abilities whenever you defeat a foe while outdoors in Midnight zones once per 60 sec. Cannot be applied to items lower than level 120. Haranir Heightening - Worldsoul Wards Requires Level 70 Max Stack: 200 Sell"
+ },
+ "7993": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243982,
+  "name": "Enchant Boots - Shaladrassil's Roots",
+  "note": "",
+  "slot": "feet",
+  "stats": {
+   "sta": 186
+  },
+  "tertiary": {
+   "leech": 22
+  },
+  "text": "Enchant Boots - Shaladrassil's Roots Item Level 80 Use: Permanently enchants boots with Shaladrassil's Roots, increasing Leech by 22 and Stamina by 186. Cannot be applied to items lower than level 120. Haranir Heightening - Worldsoul Wards Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "7995": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243984,
+  "name": "Enchant Ring - Nature's Wrath",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "crit": 22
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Nature's Wrath Item Level 80 Use: Permanently enchants a ring with Nature's Wrath, increasing Critical Strike by 22. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "7997": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243986,
+  "name": "Enchant Ring - Nature's Fury",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "crit": 27
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Nature's Fury Item Level 80 Use: Permanently enchants a ring with Nature's Fury, increasing Critical Strike by 27. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "7999": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 243988,
+  "name": "Enchant Shoulders - Nature's Grace",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "avoid": 44
+  },
+  "text": "Enchant Shoulders - Nature's Grace Item Level 80 Use: Permanently enchants shoulder armor with Nature's Grace, increasing Avoidance by 44. Cannot be applied to items lower than level 120. Haranir Heightening - Worldsoul Wards Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8001": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 243990,
+  "name": "Enchant Shoulders - Amirdrassil's Grace",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "avoid": 89
+  },
+  "text": "Enchant Shoulders - Amirdrassil's Grace Item Level 80 Use: Permanently enchants shoulder armor with Amirdrassil's Grace, increasing Avoidance by 89. Cannot be applied to items lower than level 120. Haranir Heightening - Worldsoul Wards Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8007": {
+  "desc": "触发：治疗护盾",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 243996,
+  "name": "Enchant Weapon - Worldsoul Cradle",
+  "note": "",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Worldsoul Cradle Item Level 80 Use: Permanently enchants a weapon with Worldsoul Cradle, causing your healing spells and abilities to sometimes grant your target a barrier absorbing the next ( 1 * 10020) damage. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8009": {
+  "desc": "受击时触发：吸收护盾",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 243998,
+  "name": "Enchant Weapon - Worldsoul Aegis",
+  "note": "",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Worldsoul Aegis Item Level 80 Use: Permanently enchants a weapon with Worldsoul Aegis. When damaged, the Aegis has a chance to grant you a barrier against the next 14039 damage. When depleted, the barrier erupts for 2221 Nature damage split between nearby enemies. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 20"
+ },
+ "8011": {
+  "desc": "触发：全能 +99，持续 15 秒",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 244000,
+  "name": "Enchant Weapon - Worldsoul Tenacity",
+  "note": "触发：全能 +99，持续 15 秒",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Worldsoul Tenacity Item Level 80 Use: Permanently enchants a weapon with Worldsoul Tenacity, causing your spells and abilities to grant you Nature's Tenacity, increasing your Versatility by 99 for 15 sec. Cannot be applied to items lower than level 120. Haranir Heightening - Azerothian Arms Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8013": {
+  "desc": "法力 +3%",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244002,
+  "name": "Enchant Chest - Mark of the Magister",
+  "note": "法力 +3%",
+  "slot": "chest",
+  "stats": {
+   "int": 32
+  },
+  "tertiary": {},
+  "text": "Enchant Chest - Mark of the Magister Item Level 80 Use: Permanently enchants chest armor with Mark of the Magister, increasing Intellect by 32 and total Mana by 3%. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8015": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 244004,
+  "name": "Enchant Helm - Rune of Avoidance",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "avoid": 15
+  },
+  "text": "Enchant Helm - Rune of Avoidance Item Level 80 Use: Permanently enchants helm armor with Rune of Avoidance, increasing Avoidance by 15. Cannot be applied to items lower than level 120. Thalassian Talents - Eversong Empowerments Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8017": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244006,
+  "name": "Enchant Helm - Empowered Rune of Avoidance",
+  "note": "",
+  "slot": "head",
+  "stats": {},
+  "tertiary": {
+   "avoid": 30
+  },
+  "text": "Enchant Helm - Empowered Rune of Avoidance Item Level 80 Use: Permanently enchants helm armor with Empowered Rune of Avoidance, increasing Avoidance by 30. Also grants you a burst of Movement Speed whenever you defeat a foe outdoors in a Midnight zone once per 60 sec. Cannot be applied to items lower than level 120. Thalassian Talents - Eversong Empowerments Requires Level 70 Max Stack: 200 Sell P"
+ },
+ "8019": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244008,
+  "name": "Enchant Boots - Farstrider's Hunt",
+  "note": "",
+  "slot": "feet",
+  "stats": {
+   "sta": 186
+  },
+  "tertiary": {
+   "speed": 9
+  },
+  "text": "Enchant Boots - Farstrider's Hunt Item Level 80 Use: Permanently enchants boots with Farstrider's Hunt, increasing Speed by 9 and Stamina by 186. Cannot be applied to items lower than level 120. Thalassian Talents - Eversong Empowerments Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8021": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 244010,
+  "name": "Enchant Ring - Thalassian Haste",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "haste": 22
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Thalassian Haste Item Level 80 Use: Permanently enchants a ring with Thalassian Haste, increasing Haste by 22. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "8023": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 244012,
+  "name": "Enchant Ring - Thalassian Versatility",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "vers": 22
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Thalassian Versatility Item Level 80 Use: Permanently enchants a ring with Thalassian Versatility, increasing Versatility by 22. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "8025": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244014,
+  "name": "Enchant Ring - Silvermoon's Alacrity",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "haste": 27
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Silvermoon's Alacrity Item Level 80 Use: Permanently enchants a ring with Silvermoon's Alacrity, increasing Haste by 27. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "8027": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244016,
+  "name": "Enchant Ring - Silvermoon's Tenacity",
+  "note": "",
+  "slot": "finger",
+  "stats": {
+   "vers": 27
+  },
+  "tertiary": {},
+  "text": "Enchant Ring - Silvermoon's Tenacity Item Level 80 Use: Permanently enchants a ring with Silvermoon's Tenacity, increasing Versatility by 27. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 3"
+ },
+ "8029": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_green",
+  "item_id": 244018,
+  "name": "Enchant Shoulders - Thalassian Recovery",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "leech": 66
+  },
+  "text": "Enchant Shoulders - Thalassian Recovery Item Level 80 Use: Permanently enchants shoulder armor with Thalassian Recovery, increasing Leech by 66. Cannot be applied to items lower than level 120. Thalassian Talents - Eversong Empowerments Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8031": {
+  "desc": "",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244020,
+  "name": "Enchant Shoulders - Silvermoon's Mending",
+  "note": "",
+  "slot": "shoulder",
+  "stats": {},
+  "tertiary": {
+   "leech": 132
+  },
+  "text": "Enchant Shoulders - Silvermoon's Mending Item Level 80 Use: Permanently enchants shoulder armor with Silvermoon's Mending, increasing Leech by 132. Cannot be applied to items lower than level 120. Thalassian Talents - Eversong Empowerments Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8037": {
+  "desc": "触发：火焰伤害",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 244026,
+  "name": "Enchant Weapon - Flames of the Sin'dorei",
+  "note": "",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Flames of the Sin'dorei Item Level 80 Use: Permanently enchants a weapon with Flames of the Sin'dorei, causing your spells and abilities to sometimes ignite your target. This inflicts ( 1 * (1964)) Fire damage over 10 sec before detonating for ( 1 * 4176) Fire damage split among nearby enemies. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spel"
+ },
+ "8039": {
+  "desc": "触发：主属性 +53，持续 15 秒",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 244028,
+  "name": "Enchant Weapon - Acuity of the Ren'dorei",
+  "note": "触发：主属性 +53，持续 15 秒",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Acuity of the Ren'dorei Item Level 80 Use: Permanently enchants a weapon with Acuity of the Ren'dorei, causing your spells and abilities to grant you Might of the Void, providing you with 53 Primary Stat for 15 sec. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8041": {
+  "desc": "触发：精通 +99，持续 15 秒",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 244030,
+  "name": "Enchant Weapon - Arcane Mastery",
+  "note": "触发：精通 +99，持续 15 秒",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Arcane Mastery Item Level 80 Use: Permanently enchants a weapon with Arcane Mastery, causing your spells and abilities to grant you Genius Insight, increasing your Mastery by 99 for 15 sec. Cannot be applied to items lower than level 120. Thalassian Talents - Silvermoon's Spellpower Requires Level 70 Max Stack: 200 Sell Price: 5"
+ },
+ "8159": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244641,
+  "name": "Forest Hunter's Armor Kit",
+  "name_cn": "森林猎手的护甲片",
+  "note": "",
+  "slot": "legs",
+  "stats": {
+   "main": 92,
+   "sta": 33
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "8161": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244645,
+  "name": "Thalassian Scout Armor Kit",
+  "name_cn": "萨拉斯斥候护甲片",
+  "note": "",
+  "slot": "legs",
+  "stats": {
+   "main": 19
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "8163": {
+  "derived": true,
+  "desc": "数值按客户端附魔系数推算（580 档）",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_blue",
+  "item_id": 244643,
+  "name": "Blood Knight's Armor Kit",
+  "name_cn": "血骑士的护甲片",
+  "note": "另有护甲值不计入",
+  "slot": "legs",
+  "stats": {
+   "main": 33
+  },
+  "tertiary": {},
+  "text": ""
+ },
+ "8689": {
+  "desc": "触发：随机副属性",
+  "icon": "inv_12_profession_enchanting_enchantedvellum_purple",
+  "item_id": 273071,
+  "name": "Enchant Weapon - Rite of the Hash'ey",
+  "note": "",
+  "slot": "main_hand",
+  "stats": {},
+  "tertiary": {},
+  "text": "Enchant Weapon - Rite of the Hash'ey Item Level 580 Use: Permanently enchants a weapon with Rite of the Hash'ey, causing your spells and abilities to grant you Hash'ey's Might, granting you 120 of a random secondary stat for 15 sec and favors your highest secondary stat when you're above 80% health. Cannot be applied to items lower than level 120. Amani Augments - Zul'Aman Zeal Requires Level 70 M"
+ }
+}

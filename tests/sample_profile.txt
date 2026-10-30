@@ -1,0 +1,40 @@
+# SimC 插件导出的 profile 样例（战士，用于回归测试）
+# 这是一份"人工构造但字段真实"的样例：装备 id 都来自当前赛季数据库，
+# bonus_id 用了真实的升级轨道编号，另外故意放了一件库里没有的装备（见 main_hand），
+# 用来验证"缺失装备"的报告分支。真实导出请另存，别覆盖这份。
+# 真实用法：游戏里 /simc 复制，整段贴进去即可。
+
+warrior="Kelthuzad"
+level=90
+race=human
+region=us
+server=test-realm
+role=attack
+professions=Blacksmithing=100/Jewelcrafting=100
+spec=arms
+talents=CcEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgxMGzMDGjZMzAAAAAAYmZYmZmtZ2mtZGzMzAAAAAAAAwmBbA
+# Player: Kelthuzad
+
+head=Aetherlume Sun Guard,id=244746,bonus_id=6652/12667,ilevel=318,gem_id=240967,enchant_id=7961
+neck=Thalassian Phoenix Torque,id=241139,bonus_id=6652,ilevel=308,gem_id=240967
+shoulder=Swelling Sea Spaulders,id=268226,bonus_id=6652,ilevel=305
+back=Sunfire Cloak,id=239658,bonus_id=6652,ilevel=305,enchant_id=7401
+chest=Reckless Spirit Breastplate,id=268222,bonus_id=6652/12667,ilevel=321,gem_id=240967
+wrist=Aetherlume Guards,id=244750,bonus_id=6652,ilevel=308,gem_id=0
+hands=Scaleplate Strangulators,id=268220,bonus_id=6652,ilevel=305,enchant_id=7412
+waist=Forgotten Grotto Girdle,id=268244,bonus_id=6652,ilevel=311,sockets=1,gem_id=240967
+legs=Venom Warden's Greaves,id=268224,bonus_id=6652/12667,ilevel=318,enchant_id=7410
+feet=Murder Row Fleet Feet,id=244463,bonus_id=6652,ilevel=305,enchant_id=7413
+finger1=Masterwork Sin'dorei Band,id=240949,bonus_id=6652,ilevel=308,gem_id=240967
+finger2=Signet of Azerothian Blessings,id=241140,bonus_id=6652,ilevel=318,enchant_id=7420
+trinket1=Magister's Alchemist Stone,id=241340,bonus_id=6652,ilevel=318
+trinket2=Darkmoon Dominion: Hunt,id=246304,bonus_id=6652,ilevel=308
+
+# 这一件故意用了一个库里不存在的 id，用来验证"缺失装备"的报告分支
+main_hand=Uncatalogued Greatsword,id=999999999,ilevel=334,enchant_id=7445
+off_hand=Knight-Commander's Palisade,id=244472,bonus_id=6652,ilevel=305
+
+### Gear from Bags ###
+# 背包里的东西不是当前装备，解析时应该被忽略
+# Vaultkeeper's Girdle,id=268300,ilevel=318
+# Spellbreaker's Cover,id=237832,ilevel=295

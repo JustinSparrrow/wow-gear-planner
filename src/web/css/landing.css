@@ -1,0 +1,237 @@
+/* landing.css
+
+入口页：底图、遮罩、标题区、登录卡片。 */
+
+/* ══════════════════ 入口页 ══════════════════
+   结构是「一张 keyart + 三层遮罩 + 两栏内容」。
+   遮罩这样叠：径向把左侧压到接近全黑（放标题），右侧留一点环境光
+   （放表单卡片），上下各一条线性渐变收边。只压一层纯色的话，
+   要么右边糊成一片黑、要么左边字看不清。 */
+.landing{
+  position:fixed; inset:0; z-index:300; overflow:hidden;
+  background:#06040a; transition:opacity .45s ease;
+}
+.landing.gone{opacity:0; pointer-events:none}
+
+.ld-art{
+  position:absolute; inset:-3%;
+  background:url(../img/stand.jpg) center 34%/cover no-repeat;
+  will-change:transform;
+  animation:ld-drift 54s ease-in-out infinite alternate;
+}
+/* 极慢的推轨。静图放久了像壁纸，动一点才像"场景"；
+   54 秒走完一个来回，慢到你不盯着看不出来。 */
+@keyframes ld-drift{
+  from{transform:scale(1) translate3d(0,0,0)}
+  to{transform:scale(1.07) translate3d(-1.4%,-1%,0)}
+}
+.ld-veil{
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(108% 96% at 17% 84%,
+      rgba(6,4,10,.96) 0%, rgba(6,4,10,.86) 26%,
+      rgba(8,5,14,.5) 52%, rgba(8,5,14,.08) 76%, rgba(6,4,10,.62) 100%),
+    linear-gradient(180deg, rgba(6,4,10,.88) 0%, rgba(6,4,10,.16) 16%,
+      rgba(6,4,10,0) 40%, rgba(6,4,10,.5) 82%, rgba(6,4,10,.94) 100%);
+}
+/* 极淡的横纹。暗部纯色在 1080p 上会显出渐变色阶，一层 3px 周期的
+   1.8% 白噪能把它打散，视觉上读作"胶片"而不是"脏" */
+.ld-grain{
+  position:absolute; inset:0; pointer-events:none; opacity:.6;
+  background-image:repeating-linear-gradient(0deg,
+    rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+}
+
+.ld-frame{
+  position:relative; z-index:2; height:100%;
+  max-width:1420px; margin:0 auto; padding:0 56px 66px;
+  display:grid; grid-template-columns:minmax(0,1fr) 372px;
+  gap:72px; align-items:end;
+}
+
+/* ── 左：标题区 ── */
+.ld-hero{
+  max-width:520px; align-self:stretch; display:flex; flex-direction:column;
+  justify-content:flex-end; animation:ld-in .8s .05s both;
+}
+@keyframes ld-in{from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:none}}
+
+.eyebrow{
+  display:flex; align-items:center; gap:11px; margin-bottom:28px;
+  font:500 10px/1 var(--num); letter-spacing:.4em; color:var(--gold); opacity:.7;
+}
+.eyebrow i{width:26px; height:1px; background:currentColor; opacity:.65}
+
+.ld-hero h1{
+  font-family:var(--serif); font-weight:400; font-size:clamp(38px,4.4vw,56px);
+  line-height:1.1; letter-spacing:.09em; color:#f6efe6;
+  text-shadow:0 1px 0 rgba(255,255,255,.16), 0 3px 34px rgba(0,0,0,.9),
+              0 0 70px rgba(212,180,120,.14);
+}
+.ld-hero h1 em{
+  font-style:normal; color:#ead0a0;
+  text-shadow:0 2px 30px rgba(0,0,0,.85), 0 0 52px rgba(234,208,160,.34);
+}
+.ld-rule{
+  width:84px; height:1px; margin:24px 0 20px;
+  background:linear-gradient(90deg,var(--gold),rgba(212,180,120,0));
+}
+.lede{font-size:13.5px; line-height:1.95; color:#b3a3c4; letter-spacing:.03em}
+.lede b{font-family:var(--num); font-weight:600; color:var(--gold); letter-spacing:.04em}
+
+.pts{list-style:none; margin-top:36px; display:flex; flex-direction:column; gap:16px}
+.pts li{display:flex; gap:15px}
+.pts li > em{
+  flex-shrink:0; padding-top:1px; font:400 10px/1.7 var(--num);
+  font-style:normal; color:var(--gold); opacity:.48; letter-spacing:.08em;
+}
+.pts b{
+  display:block; margin-bottom:4px; font-size:12.5px; font-weight:600;
+  color:#e3d7f0; letter-spacing:.06em;
+}
+.pts span{display:block; max-width:372px; font-size:11.5px; line-height:1.75; color:#8b7c9f}
+
+.ld-stamp{margin-top:40px; font-size:10.5px; color:#5b4d6c; letter-spacing:.14em}
+
+/* ── 右：登录卡片 ──
+   直角 + 对角两个金角标。满屏 8px 圆角是"模板感"最重的来源，
+   方角配角标才是暴雪框体本来的语言。 */
+.ld-card{
+  position:relative; width:372px; padding:28px 30px 24px;
+  background:linear-gradient(168deg, rgba(30,21,45,.93) 0%, rgba(13,9,20,.975) 62%);
+  border:1px solid rgba(212,180,120,.22);
+  box-shadow:0 34px 90px rgba(0,0,0,.72),
+             inset 0 1px 0 rgba(255,255,255,.055),
+             inset 0 0 70px rgba(110,201,216,.025);
+  backdrop-filter:blur(18px) saturate(1.15);
+  animation:ld-in .8s .18s both;
+}
+.ld-card::before{
+  content:""; position:absolute; left:30px; right:30px; top:0; height:1px; z-index:1;
+  background:linear-gradient(90deg, transparent, rgba(234,208,160,.72), transparent);
+}
+.corner{
+  position:absolute; width:16px; height:16px; pointer-events:none;
+  border:1px solid rgba(234,208,160,.62);
+}
+.corner.tl{left:-1px; top:-1px; border-right:0; border-bottom:0}
+.corner.br{right:-1px; bottom:-1px; border-left:0; border-top:0}
+
+/* 登录/注册不用药丸标签，用下划线指示——少一层填充色，块面更干净 */
+.au-tabs{
+  display:flex; gap:30px; margin-bottom:26px;
+  border-bottom:1px solid rgba(212,180,120,.14);
+}
+.au-tabs button{
+  position:relative; padding:0 0 12px; font-size:13.5px; letter-spacing:.2em;
+  color:var(--dimmer); transition:color .2s;
+}
+.au-tabs button:hover{color:#b9a8cc}
+.au-tabs button.on{color:#f2e6d2}
+.au-tabs button.on::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
+  background:var(--gold); box-shadow:0 0 10px rgba(212,180,120,.75);
+}
+
+/* 输入框只留下划线。带填充背景的圆角输入框是表单模板的标志，
+   去掉填充以后整个卡片的重量都落在文字上，更像一张印刷品。 */
+.ld-form{display:flex; flex-direction:column}
+.ld-form label{display:block; margin-bottom:17px}
+.ld-form label > span{
+  display:block; margin-bottom:8px; font-size:10px; letter-spacing:.24em;
+  color:var(--dimmer);
+}
+.ld-form input{
+  width:100%; padding:5px 2px 9px; border:0;
+  /* 只留下划线的话，未聚焦的输入框在近黑底上等于不存在——
+     密码那格会看起来像一块空白。加一道几乎看不见的向上渐隐金底，
+     不破坏"无填充"的观感，但能框出可输入区域。 */
+  background:linear-gradient(180deg, transparent 34%, rgba(212,180,120,.07) 100%);
+  border-bottom:1px solid rgba(212,180,120,.38);
+  color:var(--text); font:14px/1.4 var(--sans); letter-spacing:.04em;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.ld-form input:focus{
+  outline:none; border-bottom-color:rgba(212,180,120,.9);
+  background:linear-gradient(180deg, transparent 30%, rgba(212,180,120,.12) 100%);
+  box-shadow:0 1px 0 0 rgba(212,180,120,.35);
+}
+.ld-err:empty{display:none}
+.ld-err{
+  margin:-2px 0 12px;
+  font-size:11.5px; color:var(--down); letter-spacing:.02em;
+}
+
+.btn-gold{
+  width:100%; padding:13px 0; cursor:pointer;
+  background:linear-gradient(180deg,#dfc78f 0%,#c2a163 46%,#9b7c3a 100%);
+  color:#1c1305; font:600 13px/1 var(--sans); letter-spacing:.34em;
+  text-indent:.34em;
+  box-shadow:0 8px 26px rgba(200,166,98,.18),
+             inset 0 1px 0 rgba(255,255,255,.42),
+             inset 0 -1px 0 rgba(0,0,0,.2);
+  transition:filter .18s, box-shadow .18s, transform .1s;
+}
+.btn-gold:hover{
+  filter:brightness(1.07);
+  box-shadow:0 11px 34px rgba(200,166,98,.32),
+             inset 0 1px 0 rgba(255,255,255,.5),
+             inset 0 -1px 0 rgba(0,0,0,.2);
+}
+.btn-gold:active{transform:translateY(1px)}
+.btn-gold:disabled{filter:grayscale(.55) brightness(.82); cursor:default; transform:none}
+
+.ld-or{
+  display:flex; align-items:center; gap:14px; margin:20px 0;
+  font-size:10px; letter-spacing:.3em; color:#6a5a80; text-indent:.3em;
+}
+.ld-or::before,.ld-or::after{
+  content:""; flex:1; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,180,120,.2),transparent);
+}
+
+/* 游客出口做得比登录弱：虚线框、无填充。它是"退路"，不是"主路径"，
+   两者一样重的话，人会顺手点游客，然后在要存档时才发现存不了。 */
+.btn-ghost{
+  width:100%; padding:12px 0; cursor:pointer;
+  background:transparent; border:1px dashed rgba(212,180,120,.26);
+  color:#c2b3d4; font:400 12px/1 var(--sans); letter-spacing:.2em; text-indent:.2em;
+  transition:border-color .2s, color .2s, background .2s;
+}
+.btn-ghost:hover{
+  border-style:solid; border-color:rgba(212,180,120,.7);
+  color:#f0e3cf; background:rgba(212,180,120,.05);
+}
+.ld-note{
+  margin-top:14px; text-align:center;
+  font-size:10.5px; line-height:1.75; color:#5f5172; letter-spacing:.02em;
+}
+.ld-ver{
+  position:absolute; right:28px; bottom:20px; z-index:3;
+  font:400 10px/1 var(--num); color:#4c4060; letter-spacing:.18em;
+}
+
+@media (max-width:1080px){
+  .ld-frame{
+    grid-template-columns:1fr; gap:30px; padding:36px 32px;
+    align-content:center; overflow-y:auto;
+  }
+  /* 单列时 hero 不能再 stretch——撑满第一行再 flex-end，标题会被顶到
+     紧贴卡片上沿，中间那段留白就没了 */
+  .ld-hero{align-self:start}
+  .pts, .ld-stamp{display:none}
+  .ld-card{width:100%; max-width:400px}
+  .ld-hero h1{font-size:clamp(32px,7vw,46px)}
+}
+@media (max-height:720px){
+  .ld-frame{align-content:start; padding-top:48px; overflow-y:auto}
+  .pts{display:none}
+  .eyebrow{margin-bottom:18px}
+  .ld-rule{margin:16px 0 14px}
+}
+
+::-webkit-scrollbar{width:9px; height:9px}
+::-webkit-scrollbar-thumb{background:#34264a; border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#4a3766}
+::-webkit-scrollbar-track{background:transparent}
+

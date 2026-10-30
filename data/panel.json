@@ -1,0 +1,59 @@
+{
+ "_note": "按「职业:专精」分开存的游戏面板值。评级不是百分比；pct 是面板上括号里那个百分比，用来反推该专精的换算率（精通每个专精差好几倍）。换专精要重新填。",
+ "druid:guardian": {
+  "agi": 2382.0,
+  "sta": 63243.0,
+  "crit": 1010.0,
+  "haste": 1294.0,
+  "mastery": 252.0,
+  "vers": 419.0,
+  "pct": {
+   "crit": 31.96,
+   "haste": 30.7,
+   "mastery": 13.63,
+   "vers": 19.76
+  }
+ },
+ "hunter:beast_mastery": {
+  "agi": 2861.0,
+  "sta": 42612.0,
+  "crit": 1065.0,
+  "haste": 121.0,
+  "mastery": 1423.0,
+  "vers": 394.0,
+  "pct": {
+   "crit": 38.15,
+   "haste": 4.81,
+   "mastery": 79.5,
+   "vers": 7.3
+  }
+ },
+ "hunter:marksmanship": {
+  "agi": 2626.0,
+  "sta": 42210.0,
+  "crit": 1307.0,
+  "haste": 290.0,
+  "mastery": 1142.0,
+  "vers": 362.0,
+  "pct": {
+   "crit": 43.41,
+   "haste": 10.9,
+   "mastery": 20.52,
+   "vers": 6.15
+  }
+ },
+ "rogue:subtlety": {
+  "agi": 2111,
+  "sta": 32452,
+  "crit": 748,
+  "haste": 918,
+  "mastery": 421,
+  "vers": 515,
+  "pct": {
+   "crit": 28.26,
+   "haste": 25.73,
+   "mastery": 42.02,
+   "vers": 9.54
+  }
+ }
+}

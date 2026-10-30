@@ -1,0 +1,7 @@
+## Interface: 120105
+## Title: WoWGear 数据导出
+## Notes: 一键导出当前角色的评级与百分比，粘到配装规划器里
+## Version: 0.1.0
+## Author: WoWGear
+## SavedVariables:
+Core.lua

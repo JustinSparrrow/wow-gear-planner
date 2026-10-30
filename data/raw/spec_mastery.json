@@ -1,0 +1,206 @@
+{
+ "_note": "每专精精通系数（每 1 点精通给多少 %）。来源：客户端 sc_spell_data.inc 精通法术 effectN(1) 的 sp_coeff；已用射击猎面板验证（1142 评级 → 20.52%，系数 0.625 精确吻合）；守护德面板显示的是攻击强度那条（1%/点），不是表里的 0.7，说明个别专精面板取的是次要效果，待逐个核对。 守护德已按面板验证：面板显示攻强那条（1.0），不是 0.7。",
+ "levels": {
+  "mage:arcane": {
+   "spec_id": 62,
+   "spell": 190740,
+   "coeff": 1.32
+  },
+  "mage:fire": {
+   "spec_id": 63,
+   "spell": 12846,
+   "coeff": 0.483
+  },
+  "mage:frost": {
+   "spec_id": 64,
+   "spell": 1246752,
+   "coeff": 1.6
+  },
+  "paladin:holy": {
+   "spec_id": 65,
+   "spell": 183997,
+   "coeff": 1.5
+  },
+  "paladin:protection": {
+   "spec_id": 66,
+   "spell": 76671,
+   "coeff": 1.0
+  },
+  "paladin:retribution": {
+   "spec_id": 70,
+   "spell": 267316,
+   "coeff": 1.35
+  },
+  "warrior:arms": {
+   "spec_id": 71,
+   "spell": 1258398,
+   "coeff": 1.1
+  },
+  "warrior:fury": {
+   "spec_id": 72,
+   "spell": 76856,
+   "coeff": 1.4
+  },
+  "warrior:protection": {
+   "spec_id": 73,
+   "spell": 76857,
+   "coeff": 1.5
+  },
+  "druid:balance": {
+   "spec_id": 102,
+   "spell": 393014,
+   "coeff": 0.75
+  },
+  "druid:feral": {
+   "spec_id": 103,
+   "spell": 77493,
+   "coeff": 2.0
+  },
+  "druid:guardian": {
+   "spec_id": 104,
+   "spell": 155783,
+   "coeff": 1.0,
+   "note": "面板显示攻击强度那条（1%/点），不是 effectN(1) 的 0.7"
+  },
+  "druid:restoration": {
+   "spec_id": 105,
+   "spell": 77495,
+   "coeff": 1.311
+  },
+  "deathknight:blood": {
+   "spec_id": 250,
+   "spell": 77513,
+   "coeff": 2.0
+  },
+  "deathknight:frost": {
+   "spec_id": 251,
+   "spell": 77514,
+   "coeff": 2.0
+  },
+  "deathknight:unholy": {
+   "spec_id": 252,
+   "spell": 77515,
+   "coeff": 1.8
+  },
+  "hunter:beast_mastery": {
+   "spec_id": 253,
+   "spell": 76657,
+   "coeff": 1.9
+  },
+  "hunter:marksmanship": {
+   "spec_id": 254,
+   "spell": 193468,
+   "coeff": 0.625
+  },
+  "hunter:survival": {
+   "spec_id": 255,
+   "spell": 263135,
+   "coeff": 0.85
+  },
+  "priest:discipline": {
+   "spec_id": 256,
+   "spell": 271534,
+   "coeff": 1.35
+  },
+  "priest:holy": {
+   "spec_id": 257,
+   "spell": 77485,
+   "coeff": 0.9084
+  },
+  "priest:shadow": {
+   "spec_id": 258,
+   "spell": 343690,
+   "coeff": 0.5
+  },
+  "rogue:assassination": {
+   "spec_id": 259,
+   "spell": 76803,
+   "coeff": 1.7
+  },
+  "rogue:outlaw": {
+   "spec_id": 260,
+   "spell": 76806,
+   "coeff": 1.0
+  },
+  "rogue:subtlety": {
+   "spec_id": 261,
+   "spell": 76808,
+   "coeff": 2.45
+  },
+  "shaman:elemental": {
+   "spec_id": 262,
+   "spell": 168534,
+   "coeff": 1.875
+  },
+  "shaman:enhancement": {
+   "spec_id": 263,
+   "spell": 77223,
+   "coeff": 2.0
+  },
+  "shaman:restoration": {
+   "spec_id": 264,
+   "spell": 77226,
+   "coeff": 3.0
+  },
+  "warlock:affliction": {
+   "spec_id": 265,
+   "spell": 77215,
+   "coeff": 2.5
+  },
+  "warlock:demonology": {
+   "spec_id": 266,
+   "spell": 77219,
+   "coeff": 1.45
+  },
+  "warlock:destruction": {
+   "spec_id": 267,
+   "spell": 77220,
+   "coeff": 2.0
+  },
+  "monk:brewmaster": {
+   "spec_id": 268,
+   "spell": 117906,
+   "coeff": 0.924
+  },
+  "monk:windwalker": {
+   "spec_id": 269,
+   "spell": 115636,
+   "coeff": 2.3287
+  },
+  "monk:mistweaver": {
+   "spec_id": 270,
+   "spell": 117907,
+   "coeff": 31.185
+  },
+  "demonhunter:havoc": {
+   "spec_id": 577,
+   "spell": 185164,
+   "coeff": 2.25
+  },
+  "demonhunter:vengeance": {
+   "spec_id": 581,
+   "spell": 203747,
+   "coeff": 2.8
+  },
+  "evoker:devastation": {
+   "spec_id": 1467,
+   "spell": 362980,
+   "coeff": 1.5
+  },
+  "evoker:preservation": {
+   "spec_id": 1468,
+   "spell": 363510,
+   "coeff": 1.8
+  },
+  "evoker:augmentation": {
+   "spec_id": 1473,
+   "spell": 406380,
+   "coeff": 0.272
+  },
+  "demonhunter:devourer": {
+   "spec_id": 1480,
+   "spell": 1238855,
+   "coeff": 1.0
+  }
+ }
+}

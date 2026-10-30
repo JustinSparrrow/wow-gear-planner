@@ -1,0 +1,42 @@
+/* base.css
+
+配色变量、字体栈、reset、滚动条。其它样式都建立在这上面。 */
+
+/* Midnight 的底色是暮光紫不是科技蓝：底子压到近黑带紫，面板往上抬一点点，
+   金色做结构（线、框、标题），虚空青做交互（选中、悬停、可点的东西）。
+   两个强调色分工明确——金=静态的骨架，青=会动的手。 */
+:root{
+  --bg:#08060d;
+  --panel:#120c1a;
+  --panel-2:#181024;
+  --panel-3:#21162f;
+  --line:#291c3a;
+  --line-2:#3d2b55;
+  --text:#e2d8ee;
+  --dim:#9b8aae;
+  --dimmer:#6c5b80;
+  --gold:#d4b478;
+  --gold-deep:#8a6f3c;
+  --accent:#6ec9d8;
+  --up:#4ade80;
+  --down:#f2707a;
+  --q0:#9d9d9d; --q1:#e8e8e8; --q2:#1eff00; --q3:#0070dd;
+  --q4:#a335ee; --q5:#ff8000; --q6:#e6cc80;
+
+  --serif:"Songti SC","STSong","Source Han Serif SC","Noto Serif SC",SimSun,serif;
+  --sans:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+  --num:"Bahnschrift","DIN Alternate","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:var(--bg); color:var(--text); height:100vh; overflow:hidden;
+  font:13px/1.5 var(--sans);
+}
+[hidden]{display:none !important}
+img{display:block}
+button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
+
+/* 主界面原来直接挂在 body 上（body 是 flex 容器）。入口页插进来以后 body
+   不能再当布局容器，改由 .app 承担整个视口高度，body 只管背景。 */
+.app{height:100vh; display:flex; flex-direction:column}
+

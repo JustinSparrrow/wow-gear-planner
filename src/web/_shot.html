@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>截图探针</title>
+<style>
+  html,body{margin:0;padding:0;background:#0d0b0a}
+  iframe{width:1500px;height:940px;border:0;display:block}
+</style>
+</head>
+<body>
+<!-- 开发用：先载入样例角色，再让主界面直接停在指定部位/模式，
+     这样 headless 截图不用模拟点击。不要发布这个文件。 -->
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  // 同源 iframe 共用 sessionStorage，写这个标记等于替用户点了"以游客身份浏览"
+  sessionStorage.setItem("wg.guest", "1");
+  const sample = await (await fetch("/api/sample")).json();
+  await fetch("/api/profile", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({simc: sample.simc}),
+  });
+  const slot = q.get("slot") || "finger1";
+  const mode = q.get("mode") || "gem";
+  const f = document.createElement("iframe");
+  f.src = `/?slot=${encodeURIComponent(slot)}&mode=${encodeURIComponent(mode)}`;
+  // 只截右侧面板：把整个 iframe 往左推，让候选区顶到窗口左上角，
+  // 这样截图不用缩就能看清 28px 的小图标
+  const shift = q.get("shift");
+  if (shift) f.style.marginLeft = `-${shift}px`;
+  f.onload = () => setTimeout(() => {
+    try {
+      if (q.get("probe") === "pct"){
+        // 属性条：把四项的 HTML 全抓出来，确认 title 里那句"装备 xx% ＋ 天赋 xx%"
+        const vs = f.contentDocument.querySelectorAll(".stat .v");
+        document.title = Array.from(vs).map(e => e.innerHTML).join(" | ").slice(0, 400);
+        return;
+      }
+      const card = f.contentDocument.querySelector(".card.gem");
+      const img = f.contentDocument.querySelector(".card.gem img");
+      document.title = card && img
+        ? `IMG w=${img.naturalWidth} box=${Math.round(img.getBoundingClientRect().width)}x${Math.round(img.getBoundingClientRect().height)}`
+        : "no-card";
+    } catch (e) { document.title = "ERR " + e.message; }
+  }, 2500);
+  document.body.appendChild(f);
+})();
+</script>
+</body>
+</html>

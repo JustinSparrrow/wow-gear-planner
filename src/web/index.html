@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>配装规划器 · Midnight</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preload" as="image" href="img/stand.jpg">
+<link rel="stylesheet" href="css/base.css?v=13">
+<link rel="stylesheet" href="css/landing.css?v=13">
+<link rel="stylesheet" href="css/app.css?v=13">
+<link rel="stylesheet" href="css/account.css?v=13">
+</head>
+<body>
+
+<!-- ══════════════════ 入口页 ══════════════════
+     没登录也没选游客时挡在最前面。三个出口：登录、注册、游客。
+     游客能进主界面，只是存不了东西——先让人把工具用起来，再劝他注册。 -->
+<div class="landing" id="landing">
+  <div class="ld-art"></div>
+  <div class="ld-veil"></div>
+  <div class="ld-grain"></div>
+
+  <div class="ld-frame">
+    <section class="ld-hero">
+      <div class="eyebrow">WORLD OF WARCRAFT<i></i>MIDNIGHT</div>
+      <h1>配装<em>规划器</em></h1>
+      <div class="ld-rule"></div>
+      <p class="lede">
+        粘一段 <b>/simc</b>，读出你现在这一身。<br>
+        再把候选装一件件换上去，看属性往哪边倒。
+      </p>
+
+      <ul class="pts">
+        <li>
+          <em>01</em>
+          <div>
+            <b>三条曲线分开算</b>
+            <span>主属性、耐力、绿字各走各的档位，按本版本实测标定。不是拿主属性系数去估一切。</span>
+          </div>
+        </li>
+        <li>
+          <em>02</em>
+          <div>
+            <b>换上去当场看差</b>
+            <span>每件候选都标着相对当前装备的增减：敏捷多了 120，还是暴击少了 96。</span>
+          </div>
+        </li>
+        <li>
+          <em>03</em>
+          <div>
+            <b>团本 · 秘境 · 制造业</b>
+            <span>套装转化、自选绿字、装等档位，全摊在同一张表里比。</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="ld-stamp">数据取自本机客户端 · 不联网 · 不上传</div>
+    </section>
+
+    <section class="ld-card">
+      <span class="corner tl"></span><span class="corner br"></span>
+
+      <div class="au-tabs" id="ld-tabs">
+        <button class="on" data-mode="login">登 录</button>
+        <button data-mode="register">注 册</button>
+      </div>
+
+      <form class="ld-form" id="ld-form" autocomplete="on">
+        <label>
+          <span>用户名</span>
+          <input id="ld-user" maxlength="20" autocomplete="username" spellcheck="false">
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="ld-pass" type="password" autocomplete="current-password">
+        </label>
+        <div class="ld-err" id="ld-err"></div>
+        <button class="btn-gold" id="ld-submit" type="submit">进 入</button>
+      </form>
+
+      <div class="ld-or"><span>或者</span></div>
+
+      <button class="btn-ghost" id="ld-guest">以游客身份浏览</button>
+      <p class="ld-note">游客可用全部模拟功能。<br>配装存档与 simc 历史需要登录。</p>
+    </section>
+  </div>
+
+  <div class="ld-ver" id="ld-ver"></div>
+</div>
+
+<!-- ══════════════════ 主界面 ══════════════════ -->
+<div class="app" id="app" hidden>
+
+  <header class="topbar">
+    <div class="brand">配装规划器 <span id="season"></span></div>
+    <div class="who" id="who"></div>
+    <div class="avg" id="avg" style="display:none">
+      <span class="k">平均装等</span>
+      <span class="v" id="avg-val">—</span>
+      <span class="d" id="avg-delta"></span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="btn-save" style="display:none">存配装</button>
+    <button class="btn" id="btn-export" style="display:none">导出 simc</button>
+    <button class="btn" id="btn-panel" style="display:none">面板校准</button>
+    <button class="btn" id="btn-undo" style="display:none">撤销</button>
+    <button class="btn" id="btn-reset-all" style="display:none">全部还原</button>
+    <button class="btn" id="btn-import">导入 simc</button>
+    <button class="btn acc" id="btn-acc">登录</button>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="body">
+    <aside class="left">
+      <div class="pane-title">我的装备 <span class="n" id="equip-count"></span>
+        <span style="margin-left:auto;letter-spacing:0;color:var(--dimmer)">右键还原单个部位</span></div>
+      <div class="doll" id="doll"></div>
+    </aside>
+    <main class="right">
+      <div class="bar">
+        <div class="bar-title">
+          <span class="t" id="cand-title">选择部位</span>
+          <span class="n" id="cand-count"></span>
+        </div>
+        <div class="spacer"></div>
+        <div class="modes" id="modes">
+          <button data-mode="equip" class="on">装备</button>
+          <button data-mode="gem">宝石</button>
+          <button data-mode="enchant">附魔</button>
+        </div>
+        <div class="ilvl-wrap">
+          <button class="ilvl-btn" id="ilvl-btn">装等 <b id="ilvl-val">—</b> <i>▾</i></button>
+        </div>
+        <input class="search" id="search" placeholder="搜索装备 / 副本 / boss…" style="display:none">
+      </div>
+      <div class="tabs" id="tabs"></div>
+      <div class="cands" id="cands">
+        <div class="empty-tip">← 点左侧部位开始</div>
+      </div>
+    </main>
+  </div>
+
+  <div class="ilvl-pop" id="ilvl-pop"></div>
+  <div class="tip" id="tip"></div>
+  <div class="toast" id="toast"></div>
+
+  <!-- 账号抽屉：我的配装 / 历史 simc -->
+  <aside class="drawer" id="drawer">
+    <div class="dw-head">
+      <div>
+        <div class="dw-k">当前账号</div>
+        <div class="dw-who" id="dw-who">—</div>
+      </div>
+      <button class="dw-x" id="dw-close">×</button>
+    </div>
+    <div class="dw-tabs">
+      <button class="dw-tab on" data-tab="loadouts">我的配装</button>
+      <button class="dw-tab" data-tab="history">历史 simc</button>
+    </div>
+    <div class="dw-body" id="dw-body"></div>
+    <div class="dw-foot">
+      <button class="btn" id="dw-logout">退出登录</button>
+    </div>
+  </aside>
+  <div class="drawer-mask" id="drawer-mask"></div>
+
+</div>
+
+<!-- ══════════════════ 弹层 ══════════════════ -->
+<div class="mask" id="mask-panel">
+  <div class="modal">
+    <h2>面板校准</h2>
+    <p>游戏里鼠标悬停属性看到的<b>评级</b>（不是百分比），照着填一遍。<br>
+       填完之后，顶部的数字就是"角色基础 + 装备"的真实值——之前只算装备，
+       少了天赋和等级自带的那部分，敏捷会低一千多。</p>
+    <div class="panel-grid" id="panel-grid"></div>
+    <div class="hint" style="font-size:11.5px;color:var(--dim);margin-top:12px">
+      百分比（面板上括号里那个）：<b>建议四项都填</b>。填了才知道这个专精的天赋给了你多少绿字，
+      换装备时加减才算得准。不填只能套用该专精的通用默认值——
+      你的天赋点法跟别人不一样就会差几个百分点，属性栏百分比后面带 <b>*</b> 的就是这种情况。
+    </div>
+    <div class="panel-grid" id="panel-pct"></div>
+    <div class="hint" id="pn-spec" style="font-size:11.5px;color:var(--dim);margin-top:10px"></div>
+    <div class="hint" style="font-size:11px;color:var(--dimmer);margin-top:8px">
+      留空表示该项不可用；点「清除」恢复成只显示装备本体。
+    </div>
+    <div class="foot">
+      <button class="btn primary" id="pn-ok">保存</button>
+      <button class="btn" id="pn-clear">清除</button>
+      <button class="btn" id="pn-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask-import">
+  <div class="modal">
+    <h2>导入 simc 字符串</h2>
+    <p>游戏里输入 <b>/simc</b>，复制弹出的整段文本粘到下面。<br>
+       职业、专精、当前装备和装等都会自动识别。</p>
+    <textarea id="simc-input" placeholder='warrior="名字"
+level=90
+spec=arms
+head=...,id=250006,bonus_id=6652,ilevel=318
+...'></textarea>
+    <div class="err" id="import-err"></div>
+    <div class="foot">
+      <button class="btn primary" id="btn-load">载入</button>
+      <button class="btn" id="btn-sample">用样例试试</button>
+      <button class="btn" id="btn-close-import">关闭</button>
+      <span class="hint">只在本机处理</span>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask-picker">
+  <div class="modal picker">
+    <h2 id="pk-title">指定属性</h2>
+    <p id="pk-desc"></p>
+    <div class="opts" id="pk-opts"></div>
+    <div class="shares" id="pk-shares"></div>
+    <div class="ilvl">
+      <span>装等</span>
+      <input type="number" id="pk-ilevel">
+      <span id="pk-ilvl-hint" style="color:var(--dimmer)"></span>
+    </div>
+    <div class="foot">
+      <button class="btn primary" id="pk-ok">确定</button>
+      <button class="btn" id="pk-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask-auth">
+  <div class="modal narrow">
+    <h2 id="au-title">登录</h2>
+    <p id="au-desc">登录后导入的 simc 会自动进历史，配装也能命名存档。</p>
+    <div class="form">
+      <label><span>用户名</span><input id="au-user" autocomplete="username" maxlength="20"></label>
+      <label><span>密码</span><input id="au-pass" type="password" autocomplete="current-password"></label>
+    </div>
+    <div class="err" id="au-err"></div>
+    <div class="foot">
+      <button class="btn primary" id="au-ok">登录</button>
+      <button class="btn" id="au-switch">去注册</button>
+      <button class="btn" id="au-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask-save">
+  <div class="modal narrow">
+    <h2>保存这套配装</h2>
+    <p id="sv-desc"></p>
+    <div class="form">
+      <label><span>名称</span><input id="sv-name" maxlength="30" placeholder="毕业装 · 团本"></label>
+      <label><span>备注</span><input id="sv-note" maxlength="60" placeholder="可以不填"></label>
+    </div>
+    <div class="err" id="sv-err"></div>
+    <div class="foot">
+      <button class="btn primary" id="sv-ok">保存</button>
+      <button class="btn" id="sv-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask-export">
+  <div class="modal export">
+    <h2>导出 simc</h2>
+    <p>把下面这段粘进 Raidbots 的 <b>Quick Sim</b>，就能按现在这套装备跑模拟。<br>
+       没换过的部位和你的原文一字不差，只改了换过的几件。</p>
+    <textarea id="ex-text" readonly spellcheck="false"></textarea>
+    <div class="ex-actions">
+      <button class="btn primary" id="ex-copy">复制全文</button>
+      <a class="btn" id="ex-raidbots" href="https://www.raidbots.com/simbot/quick"
+         target="_blank" rel="noopener">打开 Raidbots<i>↗</i></a>
+      <span class="hint" id="ex-meta"></span>
+    </div>
+    <div class="warn" id="ex-warn"></div>
+    <div class="err" id="ex-err"></div>
+    <div class="foot">
+      <button class="btn" id="ex-close">关闭</button>
+      <span class="hint">账号里存过的配装也能导出</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js?v=13"></script>
+<script src="js/render.js?v=13"></script>
+<script src="js/customize.js?v=13"></script>
+<script src="js/interact.js?v=13"></script>
+<script src="js/picker.js?v=13"></script>
+<script src="js/account.js?v=13"></script>
+<script src="js/boot.js?v=13"></script>
+</body>
+</html>

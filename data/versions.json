@@ -1,0 +1,40 @@
+{
+ "_note": "每个数据集对应哪个游戏版本。main.py --check-update 拿它和 wago 上的最新 build 比；--update 只刷新过期的。",
+ "datasets": {
+  "items": {
+   "build": "12.1.5.70575",
+   "source": "Raidbots 静态数据",
+   "updated": "2026-10-27"
+  },
+  "names": {
+   "build": "12.1.5.70575",
+   "source": "wago ItemSparse",
+   "updated": "2026-10-30"
+  },
+  "gems_enchants": {
+   "build": "12.1.5.70575",
+   "source": "wowhead + SimC",
+   "updated": "2026-10-30"
+  },
+  "sockets": {
+   "build": "12.1.5.70575",
+   "source": "wowhead",
+   "updated": "2026-10-30"
+  },
+  "class_base": {
+   "build": "12.1.5.70575",
+   "source": "SimC gt 表",
+   "updated": "2026-10-31"
+  },
+  "spec_mastery": {
+   "build": "12.1.5.70575",
+   "source": "客户端法术表",
+   "updated": "2026-10-31"
+  },
+  "rating_curves": {
+   "build": "12.0.1",
+   "source": "Maxroll",
+   "updated": "2026-10-31"
+  }
+ }
+}

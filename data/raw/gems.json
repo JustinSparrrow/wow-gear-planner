@@ -1,0 +1,575 @@
+{
+ "240855": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_green",
+  "name": "Quick Peridot",
+  "stats": {
+   "haste": 12
+  }
+ },
+ "240856": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_green",
+  "name": "Quick Peridot",
+  "stats": {
+   "haste": 13
+  }
+ },
+ "240857": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_green",
+  "name": "Deadly Peridot",
+  "stats": {
+   "crit": 4,
+   "haste": 11
+  }
+ },
+ "240858": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_green",
+  "name": "Deadly Peridot",
+  "stats": {
+   "crit": 5,
+   "haste": 12
+  }
+ },
+ "240859": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_green",
+  "name": "Masterful Peridot",
+  "stats": {
+   "haste": 11,
+   "mastery": 4
+  }
+ },
+ "240860": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_green",
+  "name": "Masterful Peridot",
+  "stats": {
+   "haste": 12,
+   "mastery": 5
+  }
+ },
+ "240861": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_green",
+  "name": "Versatile Peridot",
+  "stats": {
+   "haste": 11,
+   "vers": 4
+  }
+ },
+ "240862": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_green",
+  "name": "Versatile Peridot",
+  "stats": {
+   "haste": 12,
+   "vers": 5
+  }
+ },
+ "240863": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_purple",
+  "name": "Masterful Amethyst",
+  "stats": {
+   "mastery": 12
+  }
+ },
+ "240864": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_purple",
+  "name": "Masterful Amethyst",
+  "stats": {
+   "mastery": 13
+  }
+ },
+ "240865": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_purple",
+  "name": "Deadly Amethyst",
+  "stats": {
+   "crit": 4,
+   "mastery": 11
+  }
+ },
+ "240866": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_purple",
+  "name": "Deadly Amethyst",
+  "stats": {
+   "crit": 5,
+   "mastery": 12
+  }
+ },
+ "240867": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_purple",
+  "name": "Quick Amethyst",
+  "stats": {
+   "haste": 4,
+   "mastery": 11
+  }
+ },
+ "240868": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_purple",
+  "name": "Quick Amethyst",
+  "stats": {
+   "haste": 5,
+   "mastery": 12
+  }
+ },
+ "240869": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_purple",
+  "name": "Versatile Amethyst",
+  "stats": {
+   "mastery": 11,
+   "vers": 4
+  }
+ },
+ "240870": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_purple",
+  "name": "Versatile Amethyst",
+  "stats": {
+   "mastery": 12,
+   "vers": 5
+  }
+ },
+ "240871": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_red",
+  "name": "Deadly Garnet",
+  "stats": {
+   "crit": 12
+  }
+ },
+ "240872": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_red",
+  "name": "Deadly Garnet",
+  "stats": {
+   "crit": 13
+  }
+ },
+ "240873": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_red",
+  "name": "Quick Garnet",
+  "stats": {
+   "crit": 11,
+   "haste": 4
+  }
+ },
+ "240874": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_red",
+  "name": "Quick Garnet",
+  "stats": {
+   "crit": 12,
+   "haste": 5
+  }
+ },
+ "240875": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_red",
+  "name": "Masterful Garnet",
+  "stats": {
+   "crit": 11,
+   "mastery": 4
+  }
+ },
+ "240876": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_red",
+  "name": "Masterful Garnet",
+  "stats": {
+   "crit": 12,
+   "mastery": 5
+  }
+ },
+ "240877": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_red",
+  "name": "Versatile Garnet",
+  "stats": {
+   "crit": 11,
+   "vers": 4
+  }
+ },
+ "240878": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_red",
+  "name": "Versatile Garnet",
+  "stats": {
+   "crit": 12,
+   "vers": 5
+  }
+ },
+ "240879": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_blue",
+  "name": "Versatile Lapis",
+  "stats": {
+   "vers": 12
+  }
+ },
+ "240880": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_frost_blue",
+  "name": "Versatile Lapis",
+  "stats": {
+   "vers": 13
+  }
+ },
+ "240881": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_blue",
+  "name": "Deadly Lapis",
+  "stats": {
+   "crit": 4,
+   "vers": 11
+  }
+ },
+ "240882": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_fire_blue",
+  "name": "Deadly Lapis",
+  "stats": {
+   "crit": 5,
+   "vers": 12
+  }
+ },
+ "240883": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_blue",
+  "name": "Quick Lapis",
+  "stats": {
+   "haste": 4,
+   "vers": 11
+  }
+ },
+ "240884": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_nature_blue",
+  "name": "Quick Lapis",
+  "stats": {
+   "haste": 5,
+   "vers": 12
+  }
+ },
+ "240885": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_blue",
+  "name": "Masterful Lapis",
+  "stats": {
+   "mastery": 4,
+   "vers": 11
+  }
+ },
+ "240886": {
+  "icon": "inv_12_profession_jewelcrafting_uncommon_gem_cut_void_blue",
+  "name": "Masterful Lapis",
+  "stats": {
+   "mastery": 5,
+   "vers": 12
+  }
+ },
+ "240887": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_green",
+  "name": "Flawless Quick Peridot",
+  "stats": {
+   "haste": 15
+  }
+ },
+ "240888": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_green",
+  "name": "Flawless Quick Peridot",
+  "stats": {
+   "haste": 17
+  }
+ },
+ "240889": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_green",
+  "name": "Flawless Deadly Peridot",
+  "stats": {
+   "crit": 6,
+   "haste": 14
+  }
+ },
+ "240890": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_green",
+  "name": "Flawless Deadly Peridot",
+  "stats": {
+   "crit": 7,
+   "haste": 16
+  }
+ },
+ "240891": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_green",
+  "name": "Flawless Masterful Peridot",
+  "stats": {
+   "haste": 14,
+   "mastery": 6
+  }
+ },
+ "240892": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_green",
+  "name": "Flawless Masterful Peridot",
+  "stats": {
+   "haste": 16,
+   "mastery": 7
+  }
+ },
+ "240893": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_green",
+  "name": "Flawless Versatile Peridot",
+  "stats": {
+   "haste": 14,
+   "vers": 6
+  }
+ },
+ "240894": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_green",
+  "name": "Flawless Versatile Peridot",
+  "stats": {
+   "haste": 16,
+   "vers": 7
+  }
+ },
+ "240895": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_purple",
+  "name": "Flawless Masterful Amethyst",
+  "stats": {
+   "mastery": 15
+  }
+ },
+ "240896": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_purple",
+  "name": "Flawless Masterful Amethyst",
+  "stats": {
+   "mastery": 17
+  }
+ },
+ "240897": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_purple",
+  "name": "Flawless Deadly Amethyst",
+  "stats": {
+   "crit": 6,
+   "mastery": 14
+  }
+ },
+ "240898": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_purple",
+  "name": "Flawless Deadly Amethyst",
+  "stats": {
+   "crit": 7,
+   "mastery": 16
+  }
+ },
+ "240899": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_purple",
+  "name": "Flawless Quick Amethyst",
+  "stats": {
+   "haste": 6,
+   "mastery": 14
+  }
+ },
+ "240900": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_purple",
+  "name": "Flawless Quick Amethyst",
+  "stats": {
+   "haste": 7,
+   "mastery": 16
+  }
+ },
+ "240901": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_purple",
+  "name": "Flawless Versatile Amethyst",
+  "stats": {
+   "mastery": 14,
+   "vers": 6
+  }
+ },
+ "240902": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_purple",
+  "name": "Flawless Versatile Amethyst",
+  "stats": {
+   "mastery": 16,
+   "vers": 7
+  }
+ },
+ "240903": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_red",
+  "name": "Flawless Deadly Garnet",
+  "stats": {
+   "crit": 15
+  }
+ },
+ "240904": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_red",
+  "name": "Flawless Deadly Garnet",
+  "stats": {
+   "crit": 17
+  }
+ },
+ "240905": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_red",
+  "name": "Flawless Quick Garnet",
+  "stats": {
+   "crit": 14,
+   "haste": 6
+  }
+ },
+ "240906": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_red",
+  "name": "Flawless Quick Garnet",
+  "stats": {
+   "crit": 16,
+   "haste": 7
+  }
+ },
+ "240907": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_red",
+  "name": "Flawless Masterful Garnet",
+  "stats": {
+   "crit": 14,
+   "mastery": 6
+  }
+ },
+ "240908": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_red",
+  "name": "Flawless Masterful Garnet",
+  "stats": {
+   "crit": 16,
+   "mastery": 7
+  }
+ },
+ "240909": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_red",
+  "name": "Flawless Versatile Garnet",
+  "stats": {
+   "crit": 14,
+   "vers": 6
+  }
+ },
+ "240910": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_red",
+  "name": "Flawless Versatile Garnet",
+  "stats": {
+   "crit": 16,
+   "vers": 7
+  }
+ },
+ "240911": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_blue",
+  "name": "Flawless Versatile Lapis",
+  "stats": {
+   "vers": 15
+  }
+ },
+ "240912": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_frost_blue",
+  "name": "Flawless Versatile Lapis",
+  "stats": {
+   "vers": 17
+  }
+ },
+ "240913": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_blue",
+  "name": "Flawless Deadly Lapis",
+  "stats": {
+   "crit": 6,
+   "vers": 14
+  }
+ },
+ "240914": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_fire_blue",
+  "name": "Flawless Deadly Lapis",
+  "stats": {
+   "crit": 7,
+   "vers": 16
+  }
+ },
+ "240915": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_blue",
+  "name": "Flawless Quick Lapis",
+  "stats": {
+   "haste": 6,
+   "vers": 14
+  }
+ },
+ "240916": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_nature_blue",
+  "name": "Flawless Quick Lapis",
+  "stats": {
+   "haste": 7,
+   "vers": 16
+  }
+ },
+ "240917": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_blue",
+  "name": "Flawless Masterful Lapis",
+  "stats": {
+   "mastery": 6,
+   "vers": 14
+  }
+ },
+ "240918": {
+  "icon": "inv_12_profession_jewelcrafting_rare_gem_cut_void_blue",
+  "name": "Flawless Masterful Lapis",
+  "stats": {
+   "mastery": 7,
+   "vers": 16
+  }
+ },
+ "240966": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_orange",
+  "name": "Powerful Eversong Diamond",
+  "stats": {
+   "main": 18
+  }
+ },
+ "240967": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_orange",
+  "name": "Powerful Eversong Diamond",
+  "stats": {
+   "main": 23
+  }
+ },
+ "240968": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_blue",
+  "name": "Telluric Eversong Diamond",
+  "stats": {
+   "main": 18
+  }
+ },
+ "240969": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_blue",
+  "name": "Telluric Eversong Diamond",
+  "stats": {
+   "main": 23
+  }
+ },
+ "240970": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_pink",
+  "name": "Stoic Eversong Diamond",
+  "stats": {
+   "main": 18
+  }
+ },
+ "240971": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_pink",
+  "name": "Stoic Eversong Diamond",
+  "stats": {
+   "main": 23
+  }
+ },
+ "240982": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_green",
+  "name": "Indecipherable Eversong Diamond",
+  "stats": {
+   "main": 26
+  }
+ },
+ "240983": {
+  "icon": "inv_12_profession_jewelcrafting_epic_gem_cut_green",
+  "name": "Indecipherable Eversong Diamond",
+  "stats": {
+   "main": 32
+  }
+ },
+ "241142": {
+  "icon": "inv_misc_epicgem_uncut_01",
+  "name": "Determined Heliotrope",
+  "stats": {
+   "main": 23
+  }
+ },
+ "241143": {
+  "icon": "inv_misc_epicgem_01",
+  "name": "Cognitive Heliotrope",
+  "stats": {
+   "main": 23
+  }
+ },
+ "241144": {
+  "icon": "inv_misc_cutgemsuperior6",
+  "name": "Enduring Heliotrope",
+  "stats": {
+   "main": 23
+  }
+ }
+}

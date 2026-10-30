@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# 生成物：可由 build_db.py / fetch_icons.py 重建，不入库
+data/wowgear.db
+data/wowgear.db-wal
+data/wowgear.db-shm
+data/icons/
+data/icon_failures.json
+
+# 原始数据 57MB，首次运行前用 fetch_static.py 拉取。
+# 注意这里用 data/raw/* 而不是 data/raw/ ——git 的规则是「父目录被排除后，
+# 里面的文件再写 ! 也白搭」，必须先排除内容、再逐个放行。
+data/raw/*
+# 下面这些是自抓或人工整理的，重拉不回来，必须入库
+!data/raw/gems.json
+!data/raw/enchants.json
+!data/raw/sockets.json
+!data/raw/spec_mastery.json
+!data/raw/spec_stats.json
+!data/raw/rating_curves.json
+!data/raw/class_base.json
+!data/raw/names_zhcn.json
+!data/raw/permanent-enchant.inc
+
+# 临时
+*.png
+!data/icons/**/*.png
+# 入口页底图是成品美术资源，没法重新生成，得入库
+!src/web/img/*.png
+!src/web/img/*.jpg
+
+# 账号库（密码哈希、历史、存档），绝对不能入库
+data/accounts.db
+
+# 真实角色的 /simc 导出，含角色名和服务器，只在本机当样例用
+tests/my_profile.txt
+
+# 打包产物（tools/package_beta.py 生成）
+dist/

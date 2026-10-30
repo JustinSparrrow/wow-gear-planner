@@ -1,0 +1,600 @@
+/* app.css
+
+主界面：顶栏、属性条、左右分栏、装备栏、候选卡片、浮层与弹层。 */
+
+/* ── 顶栏 ───────────────────────────────────────────── */
+.topbar{
+  display:flex; align-items:center; gap:14px; padding:0 16px; height:50px;
+  background:var(--panel); border-bottom:1px solid var(--line); flex-shrink:0;
+  position:relative;
+}
+/* 顶栏底边压一条"中间亮、两头暗"的金线。单色 1px 边框读起来是网页控件，
+   渐变金线读起来是框体——这是最便宜的一处"游戏感"。 */
+.topbar::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%, rgba(212,180,120,.05) 6%, rgba(212,180,120,.42) 50%,
+    rgba(212,180,120,.05) 94%, transparent 100%);
+  pointer-events:none;
+}
+.brand{
+  font-family:var(--serif); font-size:15px; font-weight:600;
+  letter-spacing:.16em; color:#e9dab9;
+}
+.brand span{
+  font-family:var(--num); color:var(--dimmer); font-weight:400;
+  font-size:10px; letter-spacing:.14em; margin-left:10px;
+}
+.who{display:flex; align-items:center; gap:8px; font-size:13px}
+.who .cls{font-weight:600}
+.who .tag{padding:1px 7px; border-radius:3px; background:var(--panel-3); color:var(--dim); font-size:11px}
+.who .tag.armor{color:var(--gold); background:rgba(212,180,120,.12)}
+.spacer{flex:1}
+.btn{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:6px 13px; border-radius:3px; border:1px solid var(--line-2);
+  background:var(--panel-2); font-size:12px; transition:.15s;
+  text-decoration:none;   /* 导出弹层里有个 <a class="btn"> 去 Raidbots */
+}
+.btn:hover{background:var(--panel-3); border-color:var(--accent)}
+.btn.primary{background:rgba(110,201,216,.15); border-color:var(--accent); color:#a6e2ea}
+
+/* ── 属性条 ─────────────────────────────────────────── */
+.stats{
+  display:flex; align-items:stretch; padding:0 18px; flex-shrink:0;
+  background:var(--panel-2); border-bottom:1px solid var(--line); min-height:64px;
+}
+.stat{
+  display:flex; flex-direction:column; justify-content:center;
+  padding:9px 20px 9px 0; margin-right:20px;
+  border-right:1px solid var(--line); min-width:98px;
+}
+.stat:last-child{border-right:none}
+.stat .k{font-size:11px; color:var(--dim); letter-spacing:.5px}
+/* 属性数字单独用一套窄体数字字体。默认雅黑的数字是等宽的方正字形，
+   二十来个数并排会散；Bahnschrift/Segoe UI 的数字更窄、竖向对齐更脆，
+   扫一眼就能比出大小。 */
+.stat .v{
+  font-family:var(--num); font-size:21px; font-weight:600;
+  font-variant-numeric:tabular-nums; line-height:1.2; letter-spacing:-.01em;
+}
+/* 有拆分明细的百分比给个 help 光标，不然没人会想到去悬停 */
+.stat .v .pct{font-size:11px; font-weight:400; color:var(--dim); margin-left:6px; letter-spacing:0}
+.stat .v .pct[title]{cursor:help; border-bottom:1px dotted rgba(212,180,120,.35)}
+.stat .d{font-size:11px; font-variant-numeric:tabular-nums; height:14px; color:var(--dimmer)}
+.stat .d.up{color:var(--up)}
+.stat .d.down{color:var(--down)}
+.stat.main .v{color:#ecd7a0}
+.stat-note{
+  margin-left:auto; align-self:center; text-align:right; font-size:10px;
+  color:var(--dimmer); line-height:1.5; padding-left:12px;
+}
+/* 缺天赋的百分比不压暗——数字本身是对的，压暗会看成"无效"。
+   只用一个小星号标出来，配合底下那行灰字说明。 */
+.stat .v .est{
+  font-style:normal; font-size:11px; color:var(--gold);
+  margin-left:1px; vertical-align:super; opacity:.85; cursor:help;
+}
+.stat-note .thin{color:rgba(212,180,120,.7)}
+
+/* ── 主体 ───────────────────────────────────────────── */
+.body{flex:1; display:flex; min-height:0}
+
+.left{
+  width:468px; flex-shrink:0; background:var(--panel);
+  border-right:1px solid var(--line); display:flex; flex-direction:column;
+}
+.pane-title{
+  padding:10px 14px; font-size:11px; color:var(--dim); letter-spacing:1px;
+  border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px;
+  flex-shrink:0;
+}
+.pane-title .n{color:var(--dimmer); font-variant-numeric:tabular-nums}
+
+/* 装备栏照抄游戏里的角色面板：左列七件（头颈肩背胸腕手）、右列七件
+   （腰腿脚两戒两饰）、最底下一排是两个武器位。位置写死，空格子也占位，
+   换装时格子不会跳。 */
+/* 装备栏就是一张 8 行 2 列的网格：7 行身体部位 + 1 行武器。
+   以前是"两个 flex 列 + 一个底部 grid"，三层嵌套，flex 分配高度时
+   底部那行会被挤出可视区（主手/副手看不见）。
+   现在只有一个 grid，行高 minmax(72px,1fr)：够高就平分铺满，不够就保持
+   72px 让外层 .doll 出滚动条，绝不会压扁格子把第三行绿字裁掉。 */
+.doll{
+  flex:1; min-height:0; overflow-y:auto; padding:10px;
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:minmax(72px,1fr); gap:8px;
+}
+.doll::-webkit-scrollbar-corner{background:transparent}
+
+/* 空态：一张空面板上糊一段小字最难看，给它一个居中的落点 */
+.doll-empty{
+  grid-column:1/-1; grid-row:span 8;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; padding:20px; text-align:center;
+}
+.doll-empty b{
+  font-family:var(--serif); font-weight:400; font-size:16px;
+  letter-spacing:.16em; color:#b9a8cc;
+}
+.doll-empty span{font-size:11.5px; line-height:1.95; color:var(--dimmer)}
+.doll-empty kbd{
+  font:11px var(--num); color:var(--gold); background:rgba(212,180,120,.09);
+  border:1px solid rgba(212,180,120,.26); border-radius:3px; padding:1px 5px;
+}
+
+.eq{
+  display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:4px;
+  background:var(--panel-2); border:1px solid var(--line); cursor:pointer;
+  transition:border-color .12s, background .12s; position:relative; min-width:0;
+}
+/* 品质色描边：和游戏里物品框一个逻辑，不靠文字也能扫出这身几件史诗。
+   压到 0.16~0.4 的透明度——一格子只有 2px 边框，颜色一实就跟选中态抢眼。 */
+.eq[data-q="2"]{border-color:rgba(30,255,0,.16)}
+.eq[data-q="3"]{border-color:rgba(0,112,221,.28)}
+.eq[data-q="4"]{border-color:rgba(163,53,238,.32)}
+.eq[data-q="5"]{border-color:rgba(255,128,0,.38)}
+.eq[data-q="6"]{border-color:rgba(230,204,128,.42)}
+/* hover 不再改边框色，改成内描一圈高光：改边框的话品质色会被盖掉，
+   鼠标一划过去整身装备的品质信息就没了。 */
+.eq:hover{background:var(--panel-3); box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.eq.on{border-color:var(--accent); background:rgba(110,201,216,.1)}
+.eq.on::before{
+  content:""; position:absolute; left:0; top:8px; bottom:8px; width:2px;
+  background:var(--accent); border-radius:2px;
+}
+.eq.changed{border-color:rgba(212,180,120,.45)}
+.eq.preview{border-color:rgba(110,201,216,.6); border-style:dashed}
+.eq .ic{
+  width:44px; height:44px; border-radius:4px; flex-shrink:0; object-fit:cover;
+  border:1px solid var(--line-2); background:var(--bg);
+}
+.eq .ic.empty{border-style:dashed; border-color:var(--line)}
+.eq .body2{min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; overflow:hidden}
+.eq .top{display:flex; align-items:center; gap:5px; font-size:10px; color:var(--dimmer)}
+/* 装备格"部位 + 装等"那行的两个小标记。
+   不做成图标是因为格子只有 72px 高，塞图片会把名字挤掉一行；
+   一个字符加颜色就够区分"这件有宝石、这件有附魔"。 */
+.eq .mk{font-size:9px; line-height:1; opacity:.9}
+.eq .mk.gem{color:#8ee6d0}
+.eq .mk.ench{color:var(--gold)}
+.eq .lv{margin-left:auto; font-variant-numeric:tabular-nums; color:var(--dim)}
+.eq .nm{font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.eq .sec{
+  display:flex; gap:8px; margin-top:1px; white-space:nowrap; overflow:hidden;
+  font-size:10px; color:var(--dim); font-variant-numeric:tabular-nums;
+}
+.eq .sec b{font-weight:500; color:#a9cfe0; margin-left:2px}
+.eq .sec .more{color:var(--dimmer)}
+.eq .sec.none{color:var(--dimmer); font-size:9.5px}
+.eq.changed .nm{color:var(--gold)}
+.eq .rev{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  font-size:9px; color:var(--gold); background:var(--panel-3);
+  padding:1px 4px; border-radius:3px; display:none;
+}
+.eq.changed:hover .rev{display:block}
+.eq.changed:hover .lv{opacity:0}
+
+
+/* ── 右：候选 ───────────────────────────────────────── */
+.right{flex:1; display:flex; flex-direction:column; min-width:0}
+
+.bar{
+  display:flex; align-items:center; gap:14px; padding:9px 16px 0;
+  flex-shrink:0;
+}
+.bar-title{display:flex; align-items:baseline; gap:9px}
+.bar-title .t{font-size:15px; font-weight:600}
+.bar-title .n{font-size:12px; color:var(--dim)}
+.bar .spacer{flex:1}
+
+/* 装等选择 */
+.ilvl-wrap{position:relative}
+.ilvl-btn{
+  display:flex; align-items:center; gap:6px; padding:5px 11px; border-radius:5px;
+  border:1px solid var(--line-2); background:var(--panel-2); font-size:12px;
+  transition:.15s;
+}
+.ilvl-btn:hover{border-color:var(--accent); background:var(--panel-3)}
+.ilvl-btn b{color:#a6e2ea; font-size:14px; font-variant-numeric:tabular-nums}
+.ilvl-btn i{font-style:normal; color:var(--dimmer); font-size:9px}
+.ilvl-btn .tagx{
+  font-size:10px; color:var(--gold); background:rgba(212,180,120,.14);
+  padding:0 5px; border-radius:3px;
+}
+.ilvl-pop{
+  position:fixed; z-index:95; display:none; padding:12px 14px 13px;
+  background:#150e21f7; border:1px solid var(--line-2); border-radius:4px;
+  box-shadow:0 16px 44px #000b;
+}
+.ilvl-pop.on{display:block}
+.ilvl-pop .cols{display:flex; gap:14px}
+.ilvl-pop .col{display:flex; flex-direction:column; gap:3px}
+.ilvl-pop .col .h{
+  font-size:10px; color:var(--dim); letter-spacing:.5px; text-align:center;
+  padding-bottom:4px; border-bottom:1px solid var(--line); margin-bottom:3px;
+}
+.ilvl-pop .col.special .h{color:var(--gold)}
+.ilvl-pop .lv{
+  width:46px; padding:3px 0; border-radius:4px; text-align:center;
+  font-size:11.5px; font-variant-numeric:tabular-nums; color:var(--text);
+  border:1px solid transparent; transition:.1s;
+}
+.ilvl-pop .lv:hover{background:var(--panel-3); border-color:var(--line-2)}
+.ilvl-pop .lv.on{background:rgba(110,201,216,.2); border-color:var(--accent); color:#a6e2ea}
+.ilvl-pop .col.special .lv{color:var(--gold)}
+.ilvl-pop .col.special .lv.on{background:rgba(212,180,120,.18); border-color:var(--gold)}
+.ilvl-pop .note{
+  font-size:10px; color:var(--dimmer); margin-top:9px; padding-top:8px;
+  border-top:1px solid var(--line); line-height:1.5;
+}
+
+.search{
+  padding:5px 10px; border-radius:5px; width:190px;
+  background:var(--panel-2); border:1px solid var(--line);
+  color:var(--text); font:inherit; font-size:12px;
+}
+.search:focus{outline:none; border-color:var(--accent)}
+
+/* 来源筛选 */
+.tabs{display:flex; gap:6px; padding:9px 16px; flex-wrap:wrap; flex-shrink:0}
+.tab{
+  padding:3px 10px; border-radius:3px; font-size:11.5px;
+  border:1px solid var(--line); background:var(--panel-2); color:var(--dim);
+  transition:.12s;
+}
+.tab:hover{border-color:var(--line-2); color:var(--text)}
+.tab.on{background:rgba(110,201,216,.16); border-color:var(--accent); color:#a6e2ea}
+.tab .c{color:var(--dimmer); font-variant-numeric:tabular-nums; margin-left:3px}
+.tab.on .c{color:#93dbe5}
+
+/* 用 flex 排而不是 grid：grid 在内容超出容器高度时会把行压到 min-content，
+   卡片里的属性行和差异行会叠在一起。flex 换行不会压高度。 */
+.cands{
+  flex:1; overflow-y:auto; padding:4px 16px 18px;
+  display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start;
+}
+
+/* ── 模式切换：装备 / 宝石 / 附魔 ─────────────────────
+   做成同一排的小按钮而不是 tab：它们切换的是"看这个部位的什么"，
+   不是并列的内容区，用 tab 那种大块会显得太重要。 */
+.modes{
+  display:flex; gap:2px; padding:2px; margin-right:8px;
+  background:var(--panel); border:1px solid var(--line); border-radius:3px;
+}
+.modes button{
+  padding:4px 11px; font-size:11.5px; color:var(--dim); border-radius:2px;
+  transition:.15s;
+}
+.modes button:hover{color:var(--text)}
+.modes button.on{background:var(--panel-3); color:var(--gold)}
+
+/* ── 宝石 / 附魔面板 ─────────────────────────────────── */
+.opt-head{flex:0 0 100%; margin:6px 0 12px}
+.socks{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:9px}
+.sock{
+  display:flex; align-items:center; gap:7px; padding:7px 11px; max-width:300px;
+  border:1px solid var(--line-2); border-radius:4px; background:var(--panel-2);
+  font-size:12px; color:var(--text); transition:.15s;
+}
+.sock span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* 孔位里那颗宝石的装等：278 和 295 的中文名一模一样，不写数字分不清 */
+.sock .slv{
+  font-style:normal; font-size:10px; color:var(--dimmer); margin-left:5px;
+  font-variant-numeric:tabular-nums;
+}
+.sock b{font-size:10px; font-weight:400; color:var(--dimmer); flex-shrink:0}
+.sock.on{border-color:var(--accent); background:rgba(110,201,216,.1)}
+.sock.empty span{color:var(--dimmer)}
+.sock .x{font-style:normal; font-size:10px; color:var(--dimmer); padding:0 2px; flex-shrink:0}
+.sock .x:hover{color:var(--down)}
+/* 打孔器：虚线框表示"这里还能加一个孔"。开过之后变金实线，
+   因为那是玩家已经花掉的材料，不能看起来像还能再开。 */
+.drill{
+  display:inline-flex; align-items:baseline; gap:6px; margin:0 0 9px;
+  padding:5px 11px; border:1px dashed var(--line-2); border-radius:4px;
+  font-size:11.5px; color:var(--dim); background:transparent; transition:.15s;
+}
+.drill:hover{color:var(--text); border-color:var(--accent)}
+.drill i{font-style:normal; font-size:10.5px; color:var(--dimmer)}
+.drill.on{
+  border-style:solid; border-color:rgba(212,180,120,.55);
+  color:var(--gold); background:rgba(212,180,120,.06);
+}
+.drill.on:hover{border-color:var(--down); color:var(--down)}
+.opt-head .hint{font-size:11px; color:var(--dimmer); line-height:1.6}
+.opt-grid{
+  flex:1 1 100%; display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start;
+}
+
+/* 宝石卡：左边是游戏里的宝石图标（data/icons/gems/），按品种配色，
+   玩家一眼能对上游戏里那颗石头长什么样 */
+/* 用 min-width 而不是 max-width 控制列数。
+   只写 flex-basis 的话 flex-shrink 会把卡片压到比 240px 还窄，
+   75 颗宝石挤成 4 列，名字全被截成 "Indecipherable Everso..."。 */
+.card.gem{
+  flex:1 1 240px; min-width:240px; max-width:none; flex-direction:row;
+  align-items:center; gap:10px; padding:9px 11px;
+}
+.card.gem .nm{
+  display:flex; align-items:center; gap:5px;
+  white-space:nowrap; overflow:hidden;
+}
+/* 名字先截断，品质标签永远留着——标签被裁掉的话，
+   "Quick Peridot" 三档看起来就一模一样了。 */
+.card.gem .nm .t{overflow:hidden; text-overflow:ellipsis; min-width:0}
+.card.gem .dot{
+  width:11px; height:11px; border-radius:2px; flex-shrink:0;
+}
+/* 装等：同一颗宝石有 278 和 295 两个版本，名字、品质、图标一字不差，
+   只有数值差 1~2 点。不把这个数字写出来就是两张分不清的卡。 */
+.card.gem .lv{
+  font-style:normal; font-size:9.5px; line-height:13px; color:var(--dimmer);
+  flex-shrink:0; font-variant-numeric:tabular-nums;
+}
+/* 已经插在选中那个孔里的那颗：描边高亮，省得再回孔位条上确认一遍 */
+.card.gem.cur{border-color:rgba(110,201,216,.55); background:rgba(110,201,216,.06)}
+/* 唯一宝石（永歌钻石）：名字右边一个"唯一"小标；已经装在别处时整张卡压暗 */
+.card .uq{
+  font-style:normal; font-size:9.5px; line-height:13px; padding:0 4px; margin-left:4px;
+  border-radius:2px; border:1px solid rgba(212,180,120,.45); color:var(--gold);
+  flex-shrink:0;
+}
+.card.gem.used{opacity:.42}
+.card.gem.used:hover{border-color:var(--line-2); background:var(--panel-2)}
+.card .now.used{border-color:var(--dimmer); color:var(--dimmer)}
+.card .now{
+  font-style:normal; font-size:9.5px; line-height:13px; padding:0 4px;
+  margin-left:auto; flex-shrink:0; border-radius:2px;
+  border:1px solid var(--accent); color:var(--accent);
+}
+/* 宝石/附魔图标：56px 的原图缩到 28px，加一圈暗框压住边缘 */
+.card .gico{
+  width:28px; height:28px; border-radius:4px; flex-shrink:0;
+  object-fit:cover; border:1px solid var(--line-2); background:var(--bg);
+}
+/* 品质标签：不写的话"Quick Peridot"三档（普通/完美/史诗）看起来一模一样，
+   而它们的数值正好差一截，选错了面板会平白少几点。 */
+.card .q{
+  font-style:normal; font-size:9.5px; line-height:13px; padding:0 4px;
+  margin-left:5px; border-radius:2px; border:1px solid currentColor;
+  vertical-align:1px; opacity:.85;
+}
+.card .q2{color:#6f9a52}
+.card .q3{color:#5f8fc0}
+.card .q4{color:#a97ad6}
+/* 附魔名字短、说明长，给宽一点，一行放得下"耐力 +186　闪避 +15" */
+.card.ench{
+  flex:1 1 320px; min-width:300px; max-width:none; padding:9px 11px;
+  flex-direction:row; align-items:center; gap:10px;
+}
+.card.ench .body2{min-width:0}
+.card.ench.cur{border-color:rgba(212,180,120,.55); background:rgba(212,180,120,.06)}
+.card .mut{font-style:normal; color:var(--dimmer); font-size:11px}
+
+/* 候选卡片 */
+.card{
+  position:relative; border-radius:5px;
+  background:var(--panel-2); border:1px solid var(--line); cursor:pointer;
+  transition:border-color .12s, background .12s;
+  display:flex; flex-direction:column;
+  flex:1 1 470px; max-width:calc(50% - 5px); min-width:0;
+}
+.card:hover{border-color:var(--accent); background:var(--panel-3)}
+/* 卡片是纵向 flex，不锁子项的话内容会被压扁叠在一起 */
+.card > *{flex-shrink:0}
+.card.cur{border-color:rgba(212,180,120,.55); background:rgba(212,180,120,.06)}
+/* 候选卡片左侧一条品质色，和装备格同一个逻辑：不读名字也知道这是紫装还是蓝装。
+   用 inset 阴影而不是 border-left，后者会把卡片撑宽 2px，两列就错位了。 */
+.card[data-q="2"]{box-shadow:inset 3px 0 0 rgba(30,255,0,.4)}
+.card[data-q="3"]{box-shadow:inset 3px 0 0 rgba(0,112,221,.55)}
+.card[data-q="4"]{box-shadow:inset 3px 0 0 rgba(163,53,238,.65)}
+.card[data-q="5"]{box-shadow:inset 3px 0 0 rgba(255,128,0,.78)}
+.card[data-q="6"]{box-shadow:inset 3px 0 0 rgba(230,204,128,.8)}
+
+.card .head{display:flex; gap:10px; padding:8px 11px 6px}
+.card .ic{
+  width:46px; height:46px; border-radius:5px; flex-shrink:0; object-fit:cover;
+  border:1px solid var(--line-2); background:var(--bg);
+}
+.card .ic.empty{border-style:dashed; border-color:var(--line)}
+.card .title{min-width:0; flex:1; display:flex; flex-direction:column; gap:3px}
+.card .ilv{font-size:12px; color:#a6e2ea; font-variant-numeric:tabular-nums; flex-shrink:0}
+.card .ilv small{display:block; font-size:9px; color:var(--dimmer); text-align:right; letter-spacing:.5px}
+.card .nm{
+  font-size:13px; line-height:1.3; font-weight:500;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+/* 英文名：中文名下面一行，颜色压暗。
+   用途很具体——Raidbots 那边只认英文，换装前得知道这件在那边叫什么。 */
+.card .en{
+  font-size:11px; line-height:1.35; color:var(--dimmer); margin-top:-1px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.card .badges{display:flex; align-items:center; gap:4px; flex-wrap:wrap}
+.badge{
+  padding:0 5px; border-radius:3px; font-size:10px; line-height:15px;
+  background:var(--panel); border:1px solid var(--line-2); color:var(--dim);
+}
+.badge.boe{color:var(--gold); border-color:rgba(212,180,120,.4)}
+.badge.crafted{color:#93dbe5; border-color:rgba(110,201,216,.35)}
+.badge.reprint{color:#e8a33d; border-color:rgba(232,163,61,.45); background:rgba(232,163,61,.1)}
+.badge.now{color:#1a1408; background:var(--gold); border-color:var(--gold)}
+.badge.multi{color:#c9b0ff; border-color:rgba(160,120,255,.4)}
+
+/* 来源 */
+.card .src{
+  display:flex; align-items:center; gap:6px; padding:0 11px 9px;
+  font-size:11px; color:var(--dim); min-width:0;
+}
+.kind{
+  flex-shrink:0; padding:0 5px; border-radius:3px; font-size:9.5px; line-height:15px;
+  background:var(--panel); border:1px solid var(--line-2); color:var(--dim);
+}
+.kind.raid{color:#ff9d6b; border-color:rgba(255,157,107,.35); background:rgba(255,157,107,.08)}
+.kind.mplus{color:#93dbe5; border-color:rgba(110,201,216,.35); background:rgba(110,201,216,.08)}
+.kind.delve{color:#8fd18f; border-color:rgba(143,209,143,.3); background:rgba(143,209,143,.07)}
+.kind.catalyst{color:#c9b0ff; border-color:rgba(160,120,255,.35); background:rgba(160,120,255,.08)}
+.kind.craft{color:#e0c98a; border-color:rgba(224,201,138,.3); background:rgba(224,201,138,.07)}
+.kind.prey{color:#d99ab0; border-color:rgba(217,154,176,.3); background:rgba(217,154,176,.07)}
+.card .src .txt{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.card .src .txt em{font-style:normal; color:var(--dimmer)}
+
+/* 属性数值：一行铺开，不占两列——卡片够宽，竖排只会让高度堆上去 */
+.card .svals{
+  display:flex; flex-wrap:wrap; gap:3px 20px;
+  padding:8px 12px; border-top:1px solid var(--line); background:rgba(0,0,0,.16);
+  font-size:13px; font-variant-numeric:tabular-nums;
+}
+.card .sv{display:flex; gap:6px; color:var(--dim)}
+.card .sv b{color:var(--text); font-weight:500}
+.card .sv.prim b{color:#ecd7a0}
+.card .sv.sec b{color:#a3e0e8}
+.card .sv.opt b{color:var(--gold); font-weight:400; font-size:11px}
+.card .svals.inherit{display:block; color:var(--dim); font-size:11.5px; line-height:1.6}
+.card .svals.inherit b{color:var(--gold); font-weight:400}
+
+/* 与当前装备的差 */
+.card .diffs{
+  display:flex; flex-wrap:wrap; gap:3px 10px; padding:6px 11px;
+  border-top:1px solid var(--line); font-size:11px;
+  font-variant-numeric:tabular-nums; min-height:30px; align-items:center;
+}
+.card .diffs .u{color:var(--up)}
+.card .diffs .d{color:var(--down)}
+.card .diffs .same{color:var(--dimmer)}
+.card .diffs .hint{color:var(--dimmer); font-size:10.5px}
+
+.empty-tip{
+  grid-column:1/-1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:12px; color:var(--dimmer); padding:16vh 0; font-size:13px;
+  width:100%;
+}
+.empty-tip::before{
+  content:""; width:30px; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,180,120,.55),transparent);
+}
+
+/* ── 换装提示 ───────────────────────────────────────── */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translate(-50%,16px);
+  padding:10px 18px; border-radius:4px; font-size:12px; line-height:1.5;
+  background:#150e21f5; border:1px solid var(--line-2); color:var(--text);
+  box-shadow:0 12px 34px #000a; opacity:0; pointer-events:none;
+  transition:opacity .18s, transform .18s; z-index:120; max-width:74vw;
+}
+.toast.on{opacity:1; transform:translate(-50%,0)}
+.toast b{color:#a6e2ea; font-weight:600}
+
+/* ── 装备详情浮层 ───────────────────────────────────── */
+.tip{
+  position:fixed; z-index:90; width:320px; padding:12px 14px; border-radius:4px;
+  background:#0a0710f7; border:1px solid var(--line-2); pointer-events:none;
+  box-shadow:0 14px 38px #000b; display:none;
+}
+.tip.on{display:block}
+.tip .tn{font-size:14px; font-weight:600; margin-bottom:2px}
+/* 悬停浮层里的英文名：找 Raidbots/wowhead 时按它搜 */
+.tip .ten{font-size:11.5px; color:var(--dimmer); margin-bottom:3px}
+.tip .tsub{font-size:11px; color:var(--dim); margin-bottom:9px}
+.tip .line{
+  display:flex; justify-content:space-between; font-size:12px; padding:2px 0;
+  font-variant-numeric:tabular-nums;
+}
+.tip .line.sec{color:#a3e0e8}
+.tip .line.opt{color:var(--gold)}
+/* 宝石和附魔单独一档颜色：它们不是装备本体的一部分，
+   换装时也不跟着变（跟着槽位走），视觉上要和绿字分开。 */
+.tip .line.extra{font-size:11.5px}
+.tip .line.extra.gem > span:first-child{color:#8ee6d0}
+.tip .line.extra.ench > span:first-child{color:var(--gold)}
+.tip .line .om{
+  font-size:9px; color:var(--gold); margin-left:5px; vertical-align:1px;
+  background:rgba(212,180,120,.14); padding:0 4px; border-radius:3px;
+}
+.tip .sep{height:1px; background:var(--line); margin:8px 0}
+.tip .src{font-size:11px; color:var(--dim); line-height:1.6}
+.tip .note{font-size:11px; color:var(--gold); margin-top:7px; line-height:1.5}
+
+/* ── 弹层 ───────────────────────────────────────────── */
+.mask{
+  position:fixed; inset:0; z-index:100; background:#05030acf; display:none;
+  place-items:center;
+}
+.mask.on{display:grid}
+.modal{
+  width:min(560px,92vw); background:var(--panel); border:1px solid var(--line-2);
+  border-radius:3px; padding:20px; box-shadow:0 20px 60px #000a, inset 0 1px 0 rgba(255,255,255,.05);
+}
+.modal h2{font-family:var(--serif); font-size:16px; font-weight:600;
+  letter-spacing:.1em; margin-bottom:8px; color:#e6cf9d}
+.modal p{font-size:12px; color:var(--dim); line-height:1.6; margin-bottom:14px}
+.modal textarea{
+  width:100%; height:200px; padding:12px; border-radius:6px; resize:vertical;
+  background:var(--bg); border:1px solid var(--line); color:var(--text);
+  font:12px/1.5 Consolas,monospace;
+}
+.modal textarea:focus{outline:none; border-color:var(--accent)}
+.modal .foot{display:flex; gap:10px; align-items:center; margin-top:14px}
+.modal .err{color:var(--down); font-size:12px; margin-top:10px; min-height:16px}
+/* 导出时的"这条信息 simc 表达不了"提示。用金色而不是红色：
+   不是错误，是格式的边界，玩家不用改任何东西。 */
+.modal .warn{
+  color:var(--gold); font-size:12px; line-height:1.7; margin-top:10px;
+  padding:8px 10px; border-radius:4px;
+  border:1px solid rgba(212,180,120,.28); background:rgba(212,180,120,.06);
+}
+.modal .warn b{color:var(--gold)}
+.modal .hint{font-size:11px; color:var(--dimmer); margin-left:auto}
+
+.picker .opts{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:14px 0 10px}
+.picker .opt{
+  padding:10px; border-radius:4px; border:1px solid var(--line-2);
+  background:var(--panel-2); font-size:12px; text-align:center; transition:.12s;
+  cursor:pointer;
+}
+.picker .opt:hover{border-color:var(--accent)}
+.picker .opt.on{background:rgba(110,201,216,.18); border-color:var(--accent); color:#a6e2ea}
+.picker .ilvl{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--dim); margin-top:14px}
+.picker .ilvl input{
+  width:92px; padding:7px 10px; border-radius:5px; background:var(--panel-2);
+  border:1px solid var(--line); color:var(--text); font:inherit;
+}
+.picker .ilvl input:focus{outline:none; border-color:var(--accent)}
+.picker .shares{font-size:11px; color:var(--dim)}
+.panel-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px 14px; margin:14px 0 4px}
+.panel-grid label{display:flex; align-items:center; gap:9px; font-size:12px; color:var(--dim)}
+.panel-grid label span{width:38px; flex-shrink:0}
+.panel-grid input{
+  flex:1; min-width:0; padding:7px 10px; border-radius:5px;
+  background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+  font:inherit; font-variant-numeric:tabular-nums;
+}
+.panel-grid input:focus{outline:none; border-color:var(--accent)}
+
+/* 滚动条的右下角方块：不处理的话浏览器会给它一块浅色，看着像渲染出错 */
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ── 导出 simc ──────────────────────────────────────── */
+.modal.export{width:min(660px,94vw)}
+#ex-text{height:250px; font-size:11.5px; line-height:1.6; resize:vertical}
+.ex-actions{display:flex; align-items:center; gap:10px; margin-top:12px}
+.ex-actions .hint{margin-left:auto}
+.ex-actions .btn i{font-style:normal; font-size:10px; color:var(--dimmer)}
+
+/* ── 平均装等 ───────────────────────────────────────── */
+.avg{
+  display:flex; align-items:baseline; gap:7px; margin-left:14px; white-space:nowrap;
+  flex-shrink:0;
+  padding:3px 11px; border-radius:6px;
+  background:rgba(212,180,120,.1); border:1px solid rgba(212,180,120,.3);
+}
+.avg .k{font-size:10px; color:var(--gold); letter-spacing:.5px}
+.avg .v{font-family:var(--num); font-size:18px; font-weight:600; color:#ecd7a0;
+  font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+.avg .d{font-size:11px; font-variant-numeric:tabular-nums; min-width:0}
+.avg .d.up{color:var(--up)}
+.avg .d.down{color:var(--down)}
+
