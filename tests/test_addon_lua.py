@@ -20,8 +20,8 @@ ADDON = os.path.join(ROOT, "addon", "WoWGear")
 MOCK = os.path.join(ROOT, "tests", "wowmock.lua")
 
 # 顺序必须跟 WoWGear.toc 一致
-FILES = ["Data.lua", "Lib.lua", "Util.lua", "Curve.lua", "Gear.lua", "Calc.lua",
-         "UI.lua", "List.lua", "Export.lua", "Core.lua"]
+FILES = ["Data.lua", "Lib.lua", "Util.lua", "Curve.lua", "Mod.lua", "Gear.lua", "Calc.lua",
+         "UI.lua", "List.lua", "ModUI.lua", "Export.lua", "Core.lua"]
 
 fails = []
 
@@ -747,6 +747,106 @@ def main():
     check_eq("首字母匹配不是全量返回", n_broad < 30, True)
 
     lua.execute("NS.UI.search:SetText('') NS.UI.keyword = '' NS.UI.libCache = nil")
+
+    # ── 20. 改造：自选属性 / 宝石 / 附魔 ─────────────
+    print()
+    print("─" * 62)
+    print("20. 改造：宝石、附魔、自选属性、打孔")
+    print("─" * 62)
+    # 这些规则在 python 端都有（session.socket_count / set_gem / set_enchant），
+    # 插件这边只是搬过来，所以断言也照着那边的事实写。
+    lua.execute("""
+      _ring = NS.Lib.build(158366, 334, 'agi', NS.Mod.optSplit(158366))
+      _ring.fromLib = true
+      _snap = { gear = {}, ctx = { primary = 'agi' },
+                rating = { crit = 0, haste = 0, mastery = 0, vers = 0 },
+                stats = {}, pct = {} }
+      NS.Mods[158366] = nil
+      _base = NS.Calc.simulate(_snap, 'finger1', _ring)
+    """)
+    base_haste = lua.eval("_base.dStat.haste or 0")
+    print(f"  戒指基础：急速 {base_haste}")
+    check_eq("戒指保底 1 孔", lua.eval("NS.Mod.socketCount(_ring)"), 1)
+    check_eq("戒指有 9 条附魔可选", lua.eval("#NS.Mod.enchOptions('finger')"), 9)
+
+    # 插一颗 +13 急速的宝石
+    lua.execute("NS.Mod.ensure(158366).gems[1] = 240856")
+    lua.execute("_after = NS.Calc.simulate(_snap, 'finger1', _ring)")
+    d_haste = lua.eval("(_after.dStat.haste or 0) - (_base.dStat.haste or 0)")
+    print(f"  插 +13 急速宝石后增量：{d_haste}")
+    check_eq("宝石真的加到了属性上", int(d_haste), 13)
+
+    # 错部位的附魔不能算：胸甲附魔给戒指
+    lua.execute("NS.Mod.ensure(158366).ench = 7957")
+    lua.execute("_bad = NS.Calc.simulate(_snap, 'finger1', _ring)")
+    d_sta = lua.eval("(_bad.dStat.sta or 0) - (_base.dStat.sta or 0)")
+    check_eq("错部位的附魔不算进属性", int(d_sta), 0)
+
+    # 换成戒指可用的附魔（阿曼尼精通）
+    lua.execute("""
+      local e = NS.Mod.enchOptions('finger')[1]
+      _enchId = e.id
+      NS.Mod.ensure(158366).ench = e.id
+      _ok = NS.Calc.simulate(_snap, 'finger1', _ring)
+    """)
+    d_m = lua.eval("(_ok.dStat.mastery or 0) - (_base.dStat.mastery or 0)")
+    print(f"  附上「{lua.eval('NS.Enchs[_enchId].name')}」后精通增量：{d_m}")
+    check_eq("同部位附魔生效", int(d_m) > 0, True)
+
+    # 自选属性：换一条，属性跟着变
+    lua.execute("""
+      local m = NS.Mod.ensure(244582)
+      m.opt1, m.opt2 = 'crit', 'haste'
+      _A = NS.Lib.statsFor(244582, 334, 'agi', NS.Mod.optSplit(244582))
+      m.opt1, m.opt2 = 'crit', 'mastery'
+      _B = NS.Lib.statsFor(244582, 334, 'agi', NS.Mod.optSplit(244582))
+    """)
+    print(f"  自选暴+急: 急速 {lua.eval('_A.haste or 0')} 精通 {lua.eval('_A.mastery or 0')}")
+    print(f"  自选暴+精: 急速 {lua.eval('_B.haste or 0')} 精通 {lua.eval('_B.mastery or 0')}")
+    check_eq("换成暴+急后急速有了", lua.eval("_A.haste or 0") > 0, True)
+    check_eq("换成暴+精后精通有了", lua.eval("_B.mastery or 0") > 0, True)
+    check_eq("两种选法的总额相同（预算制）",
+             abs((lua.eval("_A.crit or 0") + lua.eval("_A.haste or 0"))
+                 - (lua.eval("_B.crit or 0") + lua.eval("_B.mastery or 0"))) <= 1, True)
+
+    # 打孔：只对头/腰/腕
+    lua.execute("""
+      _head = NS.Lib.build(271492, 334, 'agi')
+      _head.fromLib = true
+      NS.Mods[271492] = nil
+      _n0 = NS.Mod.socketCount(_head)
+      NS.Mod.ensure(271492).drill = true
+      _n1 = NS.Mod.socketCount(_head)
+      _ring2 = NS.Lib.build(158367, 334, 'agi'); _ring2.fromLib = true
+      _canRing = NS.Mod.canDrill(_ring2)
+    """)
+    print(f"  头部打孔：{lua.eval('_n0')} -> {lua.eval('_n1')} 孔")
+    check_eq("打孔器多开一个孔", lua.eval("_n1") - lua.eval("_n0"), 1)
+    check_eq("戒指不能用打孔器", bool(lua.eval("_canRing")), False)
+
+    # 客户端实值的装备不叠加改造（否则宝石会被算两遍）
+    lua.execute("""
+      NS.Mods[999999] = { gems = { [1] = 240856 } }
+      _client = { id = 999999, slot = 'finger', stats = { crit = 100 } }
+      _libItem = { id = 999999, slot = 'finger', fromLib = true,
+                   stats = { crit = 100 } }
+      _c = NS.Calc.simulate(_snap, 'finger1', _client)
+      _l = NS.Calc.simulate(_snap, 'finger1', _libItem)
+      _bonusOnClient = (NS.Calc_LAST or 0)
+    """)
+    lua.execute("""
+      -- 直接比较两者：客户端值不该被加上宝石，库值应该
+      local function statsOf(it)
+        local o = {}
+        for k, v in pairs(it.stats) do o[k] = v end
+        return o
+      end
+      _clientCrit = _c.dStat.crit or 0
+      _libHaste = _l.dStat.haste or 0
+    """)
+    print(f"  客户端实值 delta.crit={lua.eval('_clientCrit')}，库值 delta.haste={lua.eval('_libHaste')}")
+    check_eq("客户端实值不叠加宝石", lua.eval("_clientCrit"), 100)
+    check_eq("库值叠加宝石", int(lua.eval("_libHaste")), 13)
 
     # ── 汇总 ────────────────────────────────────────────
     print()

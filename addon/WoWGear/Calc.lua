@@ -231,9 +231,12 @@ local function itemStats(snap, item)
 
       触发条件是 stats 为空：说明 GetItemStats 这版客户端的签名不认识。
   ]]
+  local fromLib = item.fromLib or false
   if (not st or next(st) == nil) and item.id and NS.LIB and NS.LIB[item.id] then
-    st = NS.Lib.statsFor(item.id, item.ilvl, snap.ctx.primary) or {}
+    st = NS.Lib.statsFor(item.id, item.ilvl, snap.ctx.primary,
+                         NS.Mod and NS.Mod.optSplit(item.id)) or {}
     item.libFallback = true
+    fromLib = true
   end
   if not st then return out end
   for code, v in pairs(st) do
@@ -250,6 +253,23 @@ local function itemStats(snap, item)
       end
     end
   end
+
+  --[[
+      宝石和附魔只加在「从库里算出来的」装备上。
+
+      因为身上和背包里的装备用的是客户端给的真实属性，
+      那个值本身就已经含了它现在插着的宝石、附着的魔——再加一遍就是重复计算。
+
+      库里的候选不一样：那是我们自己按权重折算的，天生不含宝石附魔，
+      所以要把玩家在改造面板里配的那份加上。
+  ]]
+  if fromLib and NS.Mod then
+    local bonus = NS.Mod.bonus(item, snap.ctx.primary)
+    for code, v in pairs(bonus) do
+      out[code] = (out[code] or 0) + v
+    end
+  end
+
   return out
 end
 

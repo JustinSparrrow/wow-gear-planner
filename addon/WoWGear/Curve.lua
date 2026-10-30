@@ -79,6 +79,7 @@ do
           tonumber(f[9]),                -- 自选属性总量（可能为空）
           f[12] or "",                   -- 名字全拼
           f[13] or "",                   -- 名字首字母
+          tonumber(f[14]) or 0,          -- 孔数（含保底，不含打孔器）
         }
 
         local si = tonumber(f[10])
@@ -210,7 +211,7 @@ end
     跟 Calc.itemStats 对已装备物品的处理保持一致，否则同一个槽
     在两边的算法不同，模拟结果会莫名差几点。
 ]]
-function Lib.statsFor(itemID, ilvl, primary)
+function Lib.statsFor(itemID, ilvl, primary, optSplit)
   local raw = NS.LIB[itemID]
   if not raw then return nil end
   local alloc = raw[6]
@@ -235,11 +236,18 @@ function Lib.statsFor(itemID, ilvl, primary)
     end
   end
 
-  -- 自选属性槽：库里只存总量（第 8 位），按默认偏好折成具体属性
+  --[[
+      自选属性槽：库里只存总量（第 8 位），要折成具体两条属性。
+
+      制造业、装绑、PVP 装备的绿字是"由玩家选两条"，客户端不记录你选了
+      什么，所以只能由玩家在界面上说。optSplit 就是他说的话；
+      没说过就用默认（暴击 + 精通各半），并在列表里标「自选」。
+  ]]
   local optTotal = raw[8]
   if optTotal and optTotal > 0 then
-    for code, share in pairs(NS.OPT_SPLIT) do
-      out[code] = (out[code] or 0) + optTotal * share * f.sec * 1e-4
+    local share = optSplit or NS.OPT_SPLIT or { crit = 0.5, mastery = 0.5 }
+    for code, ratio in pairs(share) do
+      out[code] = (out[code] or 0) + optTotal * ratio * f.sec * 1e-4
     end
   end
 
@@ -276,7 +284,7 @@ end
     任意 itemID 都能拿到图标和类型。名字用库里的中文名（客户端可能
     没有这件物品的本地化数据，所以不指望 GetItemInfo）。
 ]]
-function Lib.build(itemID, ilvl, primary)
+function Lib.build(itemID, ilvl, primary, optSplit)
   local raw = NS.LIB[itemID]
   if not raw then return nil end
   local _, _, _, _, icon = GetItemInfoInstant(itemID)

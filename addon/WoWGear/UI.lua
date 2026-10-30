@@ -520,7 +520,7 @@ exportBtn:SetScript("OnClick", function()
   if NS.Export then NS.Export.Open() end
 end)
 
-UI.resetAll, UI.resetOne = resetAll, resetOne
+UI.resetAll, UI.resetOne, UI.exportBtn = resetAll, resetOne, exportBtn
 
 --[[
     底栏内容。
@@ -547,8 +547,12 @@ local function refreshFooter()
   if cand.fromLib then
     -- 库装备没有"装等变化"可言（属性按统一装等折算），
     -- 换成显示掉落来源——这才是规划时最想知道的信息
-    UI.footTitle:SetText(string.format("%s%s|r  →  %s  |cff888888%s|r",
-      colorHex, name, slotCN, cand.source or "装备库"))
+    local modTxt = NS.Mod and NS.Mod.summary(cand) or ""
+    if modTxt ~= "" then
+      modTxt = "  |cff1eff00" .. modTxt .. "|r"
+    end
+    UI.footTitle:SetText(string.format("%s%s|r  →  %s  |cff888888%s|r%s",
+      colorHex, name, slotCN, cand.source or "装备库", modTxt))
   else
     UI.footTitle:SetText(string.format("%s%s|r  →  %s  |cff888888(%d → %d 装等)|r",
       colorHex, name, slotCN, r.oldIlvl, r.newIlvl))

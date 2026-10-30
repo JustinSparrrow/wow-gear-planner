@@ -290,6 +290,11 @@ local function fillRow(r, item, snap, slotKey, sim)
       -- 配比是插件猜的（默认暴击+精通），标出来别让人当成实物数据
       subParts[#subParts + 1] = "|cffd4b478自选|r"
     end
+    -- 配过宝石/附魔的标一下，不然改完关掉面板就看不出差别在哪
+    local modTxt = NS.Mod and NS.Mod.summary(item)
+    if modTxt and modTxt ~= "" then
+      subParts[#subParts + 1] = "|cff1eff00" .. modTxt .. "|r"
+    end
     if not item.curSeason then
       subParts[#subParts + 1] = "|cff666666旧|r"
     end
@@ -410,7 +415,9 @@ function UI:BuildCandidates(slotDef, bagItems)
 
   local ids = NS.Lib.search(UI.selected, UI.keyword, snap.ctx.specID)
   for _, id in ipairs(ids) do
-    local it = NS.Lib.build(id, UI.targetIlvl, snap.ctx.primary)
+    -- 带上玩家配的自选属性，否则列表里显示的和模拟算的会是两套数
+    local it = NS.Lib.build(id, UI.targetIlvl, snap.ctx.primary,
+                            NS.Mod.optSplit(id))
     if it then list[#list + 1] = it end
   end
 

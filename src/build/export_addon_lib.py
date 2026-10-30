@@ -80,6 +80,14 @@ KEEP_STATS = {3, 4, 5, 7, 24, 25, 32, 36, 40, 49, 71, 72, 73, 74}
 # 但法系武器不守这个规矩：主手 30629 / 副手 16132 / 单手 23380，
 # 像是抓数据时把法术强度也算进了智力（30629 / 5259 = 5.82）。
 # 不修的话，法系职业在装备库里会看到智力是物理武器 5.8 倍的锤子。
+# 插槽规则（跟 src/wowlib/session.py 里的 GUARANTEED_SOCKETS 一致）
+#
+# 12.x 的宝石系统：戒指和项链**保底一个棱彩孔**，不管是掉的、造的还是
+# 升级出来的；头/腰/腕可以用打孔器开一个（开没开只有玩家知道，所以
+# 插件里由玩家自己勾）；别的部位没有孔。
+GUARANTEED_SOCKETS = {"finger": 1, "neck": 1}
+DRILLABLE_SLOTS = {"head", "waist", "wrist"}
+
 PRI_STD = 5259
 PRI_ABNORMAL = 10000      # 明显超过护甲标准的，按法系武器的单位错误处理
 
@@ -220,7 +228,7 @@ def main():
                 sources[r["item_id"]] = inst_cn or enc_cn
 
     sql = """SELECT id, name, name_cn, quality, slot, raw_ilevel, specs,
-                    inventory_type, is_current
+                    inventory_type, is_current, socket_info
              FROM items {} ORDER BY id"""
     if not include_all:
         sql = sql.format("WHERE is_current = 1")
@@ -278,13 +286,23 @@ def main():
 
         name_py, name_ini = pinyin_of(name)
 
+        # 孔数：库里的真值跟保底规则取最大。少数团本项链自带两孔，
+        # socket_info 里会写两条，所以不能只用保底值
+        sockets = 0
+        if r["socket_info"]:
+            try:
+                sockets = len((json.loads(r["socket_info"]) or {}).get("sockets") or [])
+            except (TypeError, ValueError):
+                sockets = 0
+        sockets = max(sockets, GUARANTEED_SOCKETS.get(slot, 0))
+
         # 字段：id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制|全拼|首字母
         rows.append("|".join([
             str(item_id), name, str(r["raw_ilevel"] or 0), str(r["quality"] or 1),
             slot, str(r["inventory_type"] or 0), stat_str,
             "1" if r["is_current"] else "0",
             str(opt_total or ""), str(src_idx), str(spec_idx),
-            name_py, name_ini,
+            name_py, name_ini, str(sockets),
         ]))
         kept.add(item_id)
 
@@ -305,7 +323,7 @@ def main():
     out.append("    两张去重索引表后约 100KB，Curve.lua 加载时解析一遍。")
     out.append("")
     out.append("    ── 字段 ───────────────────────────────────────────")
-    out.append("    id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制|全拼|首字母")
+    out.append("    id|名字|基础装等|品质|槽位|物品类型|属性|本赛季|自选总量|来源|专精限制|全拼|首字母|孔数")
     out.append("")
     out.append("    最后两列是名字的拼音（全拼 / 首字母）。存在的理由：中文输入法")
     out.append("    在组合未提交时，EditBox 的 GetText() 给的是拼音串（a'man'ni），")
@@ -349,6 +367,54 @@ def main():
     for v in spec_pool.items:
         out.append("  {" + ",".join(str(s) for s in v) + "},")
     out.append("}")
+    out.append("")
+
+    # ── 宝石与附魔 ──────────────────────────────────────
+    # 这两样跟装备属性不同：它们是**固定数值**，不随装等缩放。
+    # 一颗 295 的急速宝石永远是 +13 急速，所以直接存数值，不走曲线。
+    out.append("--[[")
+    out.append("    宝石，由 data/wowgear.db 的 gems 表导出。")
+    out.append("    字段：id|名字|品质|物品等级|品种|属性")
+    out.append("    属性是**绝对数值**，不随装等缩放——宝石插上就那么多。")
+    out.append("]]")
+    out.append("NS.GEM_RAW = [==[")
+    for r in conn.execute("""SELECT id, name_cn, name, quality, ilvl, kind_cn, stats
+                             FROM gems ORDER BY kind_cn, ilvl DESC, id"""):
+        try:
+            st = json.loads(r["stats"] or "{}")
+        except ValueError:
+            st = {}
+        stat_str = ",".join(f"{k}:{v}" for k, v in sorted(st.items()))
+        out.append("|".join([
+            str(r["id"]), clean(r["name_cn"] or r["name"] or str(r["id"])),
+            str(r["quality"] or 2), str(r["ilvl"] or 0),
+            clean(r["kind_cn"] or ""), stat_str,
+        ]))
+    out.append("]==]")
+    out.append("")
+
+    out.append("--[[")
+    out.append("    附魔，由 enchants 表导出。字段：id|名字|部位|属性")
+    out.append("    名字去掉了「附魔戒指 - 」这类前缀，因为列表已经按部位分好了。")
+    out.append("]]")
+    out.append("NS.ENCH_RAW = [==[")
+    for r in conn.execute("""SELECT id, name_cn, name, slot, stats
+                             FROM enchants ORDER BY slot, id"""):
+        try:
+            st = json.loads(r["stats"] or "{}")
+        except ValueError:
+            st = {}
+        # "main" 是"主属性"占位，落到本职业真吃的那条上（Calc.primary 处理）
+        stat_str = ",".join(f"{k}:{v}" for k, v in sorted(st.items()))
+        full = r["name_cn"] or r["name"] or str(r["id"])
+        for pre in ("附魔戒指 - ", "附魔武器 - ", "附魔头盔 - ", "附魔护肩 - ",
+                    "附魔胸甲 - ", "附魔腿部 - ", "附魔靴子 - ", "附魔护腕 - ",
+                    "附魔腰带 - ", "附魔手套 - ", "附魔披风 - "):
+            if full.startswith(pre):
+                full = full[len(pre):]
+                break
+        out.append("|".join([str(r["id"]), clean(full), r["slot"] or "", stat_str]))
+    out.append("]==]")
     out.append("")
 
     # 装等系数表
