@@ -1,0 +1,191 @@
+# Demo - Beast Mastery - 2026-10-30 00:52 - CN/Example
+# SimC Addon 12.1.5-03
+# WoW 12.1.5.70575, TOC 120105
+# Requires SimulationCraft 1000-01 or newer
+
+hunter="Demo"
+level=90
+race=blood_elf
+region=cn
+server=Example
+role=attack
+professions=engineering=1/skinning=100
+spec=beast_mastery
+# loot_spec=survival
+
+talents=C0PAD57yiELKEty14ekTDtZEqAMmxwCsAzwQDbAAYGzMzsMzwMzMjZGMzYmhZGzMzYzMjZMDGaGAAAAAAAAMzYmBMzGBMLgtBA
+
+# Saved Loadout: h8
+# talents=C0PAD57yiELKEty14ekTDtZEqAbzYGDLGWYmZ2MYGbAAYGzMzs8AzwMzMjZGMzYmhZGzMzYzMjZMDGjZAAAAAAAAwMjBmZmZDwiZBsNAM
+# Saved Loadout: 团本纯单h1257
+# talents=C0PAD57yiELKEty14ekTDtZEqAMmxwCsAzwghNAAMDjZWmZYGzMmhZGjZGmZMzMjNzMmxMYMmBAAAAMDAAAzMGDYmNAMLgtBgB
+# Saved Loadout: 双问号
+# talents=C0PAD57yiELKEty14ekTDtZEqAbzYGDLGWYmZ2MYGbAAYGzMzsMzwMzMjZGMzYmhZGzMzYzMjZMDGjZAAAAAAAAwMjBmZmZDwiZBsNAA
+# Saved Loadout: anni
+# talents=C0PAD57yiELKEty14ekTDtZEqAMmxwCsAzwghNAAMjZmZWmZYmZmxMDmZMzwMjZmZsZmxMmBDmBAAAAAAAAzMmZAzsBgZBsNAA
+
+omnium_talents=136814:1/136820:1/136817:1/136819:1/136822:1
+
+# 潜伏蝰蛇的渗液之牙 (321)
+head=,id=271492,enchant_id=7961,bonus_id=6652/13696/13440/13692/13698/12846,redirected_base_stats=239035
+# 亚基克星藏骨匣 (341)
+neck=,id=268265,gem_id=240908/240983,bonus_id=6652/13668/13334/13987/12856
+# 潜伏蝰蛇之颚 (334)
+shoulder=,id=271490,enchant_id=8031,bonus_id=13334/6652/13694/13697/12854,redirected_base_stats=268231
+# 信徒的流丝罩袍 (331)
+back=,id=239656,bonus_id=12214/13667/12497/13751/14001/8960/12384/8794/13836,content_tuning=3615,crafted_stats=49/36,crafting_quality=5
+# 潜伏蝰蛇的鳞板胸甲 (334)
+chest=,id=271495,enchant_id=7987,bonus_id=13334/6652/13846/12854/13690/13698/1587,redirected_base_stats=271876
+# 尊崇公会战袍 (1)
+tabard=,id=69210,content_tuning=866
+# 远行者的板层护腕 (331)
+wrist=,id=244584,bonus_id=12214/13667/12497/13751/14001/8960/12384/8794/13836/13696,content_tuning=3615,crafted_stats=36/40,crafting_quality=5
+# 潜伏蝰蛇的穿皮护手 (334)
+hands=,id=271493,bonus_id=13334/6652/12854/14049/13691/13697/1587,redirected_base_stats=281238
+# 受诅藏骨腰带 (334)
+waist=,id=268216,gem_id=240914,bonus_id=6652/13695/13662/13334/12854
+# 远行者的加固腿铠 (331)
+legs=,id=244582,enchant_id=8159,bonus_id=12214/13667/12497/13751/14001/8794/13836,content_tuning=3615,crafted_stats=36/32,crafting_quality=5
+# 潜伏蝰蛇踏靴 (321)
+feet=,id=271494,enchant_id=7963,bonus_id=43/12846,redirected_base_stats=272248
+# 精工辛多雷指环 (331)
+finger1=,id=240949,enchant_id=7967,gem_id=240908,bonus_id=12214/13667/12497/13751/14001/8791/13836,content_tuning=3615,crafted_stats=36/49,crafting_quality=5
+# 邪恶炼金师指环 (334)
+finger2=,id=268249,enchant_id=7967,gem_id=240918,bonus_id=6652/13668/13334/12854
+# 盖博的无底袋 (334)
+trinket1=,id=270164,bonus_id=6652/13334/12854
+# 扭曲恐兽触须 (334)
+trinket2=,id=281215,bonus_id=6652/13334/12854
+# 强酸安息巨弓 (341)
+main_hand=,id=268207,enchant_id=8689,bonus_id=6652/13334/13708/12856
+
+### Gear from Bags
+#
+# 护卫之牙束带 (311)
+# neck=,id=273781,bonus_id=12843/13440/6652/13668/12699,content_tuning=1279
+#
+# 风化的影月护符 (73)
+# neck=,id=186378,bonus_id=9121/7187/40/7575,content_tuning=2106
+#
+# 潜伏蝰蛇之颚 (334)
+# shoulder=,id=271490,enchant_id=8001,bonus_id=13334/13694/6652/13697/12854,content_tuning=1040
+#
+# 雷什裹布 (170)
+# back=,id=235499,enchant_id=7403,gem_id=238045,bonus_id=12401/9893/12258
+#
+# 褪色的晨光指挥官胸甲 (253)
+# chest=,id=258936,bonus_id=13900/13663,drop_level=90,content_tuning=3321
+#
+# 奥格瑞玛战袍 (1)
+# tabard=,id=45581,content_tuning=883
+#
+# 夏日天空战袍 (1)
+# tabard=,id=35279,content_tuning=394
+#
+# 暗矛战袍 (1)
+# tabard=,id=45582,content_tuning=866
+#
+# 纱衣护手 (292)
+# hands=,id=280035,bonus_id=12833/6652/13662,content_tuning=6772
+#
+# 潜伏蝰蛇的穿皮护手 (321)
+# hands=,id=271493,enchant_id=8730,bonus_id=12846/13334/42/14049/13691/13697/1574,redirected_base_stats=281238
+#
+# 潜伏蝰蛇的珍贵尖牙 (321)
+# waist=,id=271489,bonus_id=6652/13696/13440/12846,redirected_base_stats=251155
+#
+# 根语者的树皮扣环 (282)
+# waist=,id=257018,bonus_id=12826/6652/13696/13662,content_tuning=4240
+#
+# 巨兽束腰 (321)
+# waist=,id=251228,bonus_id=13440/6652/13696/13662/12699/12846,content_tuning=1279
+#
+# 利希尔的锁链护腿 (311)
+# legs=,id=251141,bonus_id=12843/13440/6652/13662/12699,content_tuning=1279
+#
+# 恶臭圣匣战靴 (292)
+# feet=,id=280038,bonus_id=12833/6652/13662,content_tuning=6772
+#
+# 鲁莽旅人战靴 (321)
+# feet=,id=268258,enchant_id=7963,bonus_id=6652/13662/13334/12846,content_tuning=7359
+#
+# 闪光能量战靴 (321)
+# feet=,id=159388,enchant_id=7963,bonus_id=13440/6652/13662/12699/12846,content_tuning=1279
+#
+# 轻率征服者长靴 (311)
+# feet=,id=159371,bonus_id=12843/13440/6652/13662/12699,content_tuning=1279
+#
+# 咆哮奴役玺戒 (321)
+# finger1=,id=251136,enchant_id=7967,gem_id=240908,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 翠玉盘蛇指环 (321)
+# finger1=,id=162544,enchant_id=7967,gem_id=240898,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 护光者的禁锢 (321)
+# finger1=,id=251194,enchant_id=7967,gem_id=240898,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 衔尾蛇印玺 (321)
+# finger1=,id=272150,enchant_id=7967,gem_id=240900,bonus_id=6652/13668/12846,content_tuning=6011
+#
+# 血印玺戒 (305)
+# finger1=,id=277897,bonus_id=12841/41/13668,content_tuning=6772
+#
+# 骑士之戒 (279)
+# finger1=,id=143903,bonus_id=12825/13668,content_tuning=425
+#
+# 阿特洛苏斯的腐化玺戒 (321)
+# finger1=,id=252258,enchant_id=7967,gem_id=240900,bonus_id=13440/40/13668/12699/12846,content_tuning=1279
+#
+# 窃来的珍贵指环 (321)
+# finger1=,id=251148,enchant_id=7967,gem_id=240906,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 充能沙石指环 (321)
+# finger1=,id=158366,enchant_id=7967,gem_id=240908,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 阿曼尼督军的指环 (321)
+# finger1=,id=273792,enchant_id=7967,gem_id=240908,bonus_id=13440/6652/13668/12699/12846,content_tuning=1279
+#
+# 骑士之戒 (279)
+# finger1=,id=143903,bonus_id=12825/13668,content_tuning=425
+#
+# 乌拉特克贪婪之心 (334)
+# trinket1=,id=270175,bonus_id=6652/13334/12854
+#
+# 盖博的无底袋 (321)
+# trinket1=,id=270164,bonus_id=6652/13334/12846,content_tuning=7359
+#
+# 日蚀临世之印 (298)
+# trinket1=,id=280835,bonus_id=41/13333/12835/11215,content_tuning=7307
+#
+# 守护者的躁动核心 (308)
+# trinket1=,id=270165,bonus_id=41/13334/12842
+#
+# 剧毒狂怒之泉 (334)
+# trinket1=,id=270168,bonus_id=40/13334/12854
+#
+# P.O.W. x3 (331)
+# main_hand=,id=268477,enchant_id=8689,bonus_id=12214/12497/13751/14004/12715/11136/13836,content_tuning=3615,crafted_stats=49,crafting_quality=5
+#
+# 深渊巢魔的长柄大斧 (321)
+# main_hand=,id=268215,bonus_id=6652/13334/13846/12846,content_tuning=7359
+#
+# 盖博的备用冲击枪 (321)
+# main_hand=,id=268200,bonus_id=6652/13335/12850,content_tuning=7359
+
+### Additional Character Info
+#
+# catalyst_currencies=2813:8/3269:8/3116:8/3378:8/3465:7
+#
+# upgrade_currencies=c:1792:1019/c:3442:710/c:3445:235/c:3443:403/c:3444:50/c:3446:185/i:280562:8/i:274476:1
+#
+# slot_high_watermarks=0:321:334/1:341:341/2:334:334/3:334:334/4:334:334/5:331:334/6:321:331/7:331:334/8:334:334/9:331:331/10:334:334/11:331:331/12:341:341/13:0:308/14:308:337/15:308:321/16:1:292
+#
+# upgrade_achievements=40942/40943/40944/40945/41886/41887/41888/41892/42767/42768/42769/42770/61809/62410/62411/62412/62414/62416
+#
+# bonus_roll_currencies=3418:0/3511:0
+#
+# bonus_roll_items=3418:278284:5:4:268207:254/3418:278284:5:4:268265:254/3418:278284:5:4:270168:254/3418:278284:5:4:270175:254/3418:278284:5:4:271876:254/3418:278285:95:1:268216:255/3418:278286:5:2:270924:255/3418:278286:95:2:270164:253/3418:278290:95:4:268231:255/3418:286019:5:3:281215:253/3418:286019:95:3:281238:253
+
+
+
+# Checksum: a0f96098

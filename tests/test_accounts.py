@@ -81,20 +81,29 @@ def main():
     check("登录令牌", "登出后令牌作废", [("user_of", None, accounts.user_of(c, token))])
 
     # ── 历史 ────────────────────────────────────────────────
-    text = open(os.path.join(HERE, "my_profile.txt"), encoding="utf-8").read()
+    # 历史用哪份样例：本机真实导出优先，没有就用入库的脱敏版（内容一样）
+    sample = next((p for p in (os.path.join(HERE, "my_profile.txt"),
+                               os.path.join(HERE, "demo_profile.txt"))
+                   if os.path.exists(p)), None)
+    if not sample:
+        print("找不到样例导出（tests/demo_profile.txt 应该跟着仓库走）")
+        return 2
+    text = open(sample, encoding="utf-8").read()
     prof = parse(text)
     s = Session(connect(), prof, load_budget(), raw_text=text)
     avg = s.avg_ilevel()[0]
     h1 = accounts.record_history(c, uid, text, prof, avg)
     h2 = accounts.record_history(c, uid, text, prof, avg)
     hist = accounts.list_history(c, uid)
+    # 角色名来自样例文件第一行的注释，跟着样例走（脱敏版叫 Demo）
+    want_name = "Demo" if os.path.basename(sample) == "demo_profile.txt" else "尛柒誒"
     check("simc 历史", "同一份只留一条", [
         ("两次返回同 id", True, h1 == h2),
         ("条目数", 1, len(hist)),
         ("装等一致", avg, hist[0]["avg_ilevel"]),
-        ("名字进标签", True, "尛柒誒" in hist[0]["label"]),
+        ("名字进标签", True, want_name in hist[0]["label"]),
         # 抽屉按角色分组：只靠 label 里的字符串切不可靠，得单独存一列
-        ("角色名单独存", "尛柒誒", hist[0]["char_name"]),
+        ("角色名单独存", want_name, hist[0]["char_name"]),
         ("专精中文名", "野兽控制", hist[0]["spec_cn"]),
     ])
     check("simc 历史", "换一份内容则新增一条", [

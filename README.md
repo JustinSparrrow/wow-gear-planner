@@ -11,28 +11,53 @@
 | 想了解 | 去哪看 |
 |---|---|
 | 上手（装什么、跑什么命令） | 本文件往下读 |
-| 为什么这么设计、每一步踩了什么坑 | [`技术路线.md`](技术路线.md) |
+| 为什么这么设计、每一步踩了什么坑 | [`docs/技术路线.md`](docs/技术路线.md) |
 | 界面为什么长这样、卡片上每个数字怎么来的 | [`docs/界面.md`](docs/界面.md) |
 | 属性怎么算的、宝石附魔的坑 | [`docs/计算.md`](docs/计算.md) |
 | 数据从哪来、表结构、建库、图标 | [`docs/数据.md`](docs/数据.md) |
+| 各专精的精通系数（含待验证项） | [`docs/专精精通系数表.md`](docs/专精精通系数表.md) |
 | 改某一块代码 | 对应目录的 `README.md`（`src/*/README.md`） |
 
 ## 快速开始
 
+只要有 Python 3.10+，**没有第三方依赖**，不用装任何东西。
+
 ```bash
-python main.py                    # 交互式，用 tests/my_profile.txt 当样例
-python main.py 你的导出.txt        # 换成自己的 simc 导出
-python main.py --web              # 网页界面（http://127.0.0.1:8765）
+git clone <这个仓库> && cd <目录>
+python main.py                 # 交互式，载入自带的样例角色
+python main.py --web           # 网页界面 http://127.0.0.1:8765
+python main.py 你的导出.txt     # 换成自己的 /simc 导出
 ```
 
-第一次用（或换了赛季）先建库：
+仓库里带了建好的 `data/wowgear.db`（5MB）和一份**脱敏的样例导出**
+（`tests/demo_profile.txt`，角色名和服务器换成了 Demo/Example）。
+所以 clone 完直接就能跑，不用先下 61MB 原料、也不用建库。
+
+想看自己的角色：游戏里输入 `/simc` 复制全文，存成 txt 丢给 `main.py`；
+或者 `--web` 之后粘进导入框。
+
+### 数据过期了（换赛季 / 换补丁）
 
 ```bash
-python main.py --build        # 从 data/raw 构建数据库，约 10 秒
-python main.py --test         # 验收测试，237 + 40 项
-python main.py --size         # 看各处占了多少空间，哪些能删
-python main.py --check-update # 对比 wago 上的最新 build，看哪些数据集过期
-python main.py --update       # 只重拉过期的数据集，然后重建库
+python main.py --check-update   # 对比 wago 上的最新 build，看哪些数据集过期
+python main.py --update         # 只重拉过期的那几份，然后重建库
+```
+
+要完整重建，得先有原料（61MB，不入库）：
+
+```bash
+python src/build/fetch_static.py   # 拉 Raidbots 静态数据（可加 --proxy）
+python main.py --build             # 从 data/raw 建库，约 10 秒
+```
+
+> 为什么自带的库要入库：重建一次要先拉 61MB 再跑十几秒，别人只是想试一下的话
+> 成本太高。代价是每次 `--build` 都会改这个文件，提交时留意别看花眼。
+
+### 其它命令
+
+```bash
+python main.py --test    # 验收测试，287 + 40 项
+python main.py --size    # 看各处占了多少空间，哪些能删
 ```
 
 交互式里能做的事：
@@ -140,21 +165,24 @@ src/build/        构建期脚本，离线跑，不进运行时
 ## 目录结构
 
 ```
-魔兽世界/
+魔兽装备规划器/
 ├── main.py                 唯一入口（交互式 / --web / --test / --build / --check-update）
 ├── VERSION                 当前版本号
-├── 技术路线.md             为什么这么设计、接下来往哪走
-├── 专精精通系数表.md       各专精的精通系数（含待验证项）
-├── docs/                   界面 / 计算 / 数据三篇详解
+├── docs/                   文档
+│   ├── 技术路线.md         为什么这么设计、接下来往哪走
+│   ├── 界面.md             界面、面板校准、账号、导出
+│   ├── 计算.md             simc 解析、属性曲线、宝石附魔、套装转化
+│   ├── 数据.md             数据来源、表结构、图标链路
+│   └── 专精精通系数表.md   各专精的精通系数（含待验证项，配套 .csv）
 ├── data/
-│   ├── raw/                原始数据（57MB，各类抓取结果）
+│   ├── raw/                原始数据（57MB，各类抓取结果；可重拉的已忽略）
 │   ├── icons/              图标，离线可用（另有 gems/ enchants/ 两个子目录）
 │   ├── wowgear.db          游戏数据（可 --build 重建）
 │   ├── accounts.db         账号 / 历史 / 配装存档（**不可重建**）
 │   ├── versions.json       每个数据集的版本
 │   ├── stat_curve.csv      属性曲线采样表
-│   ├── panel.json          玩家填的面板基准（按职业:专精分存）
-│   └── player_crafted.json 玩家确认过的自选属性
+│   ├── panel.json          玩家填的面板基准（按职业:专精分存，不入库）
+│   └── player_crafted.json 玩家确认过的自选属性（不入库）
 ├── src/
 │   ├── wowgear/            核心层：路径 / 常量 / 曲线 / 换算 / 来源 / 配置 / 账号
 │   ├── wowlib/             业务层：simc 解析 / 校准 / 属性选择 / 目录 / 天赋 / 会话
@@ -163,9 +191,9 @@ src/build/        构建期脚本，离线跑，不进运行时
 │   └── web/                index.html + css/ + js/ + img/
 ├── addon/WoWGear/          游戏内插件：一键导出角色评级与百分比
 ├── tools/                  import_addon.py（导入插件数据）、sample_curve.py、package_beta.py
-├── tests/                  278 + 40 项验收测试 + 样例 profile
-├── ref/                    SimC 源码片段，查公式时参考
-└── dist/                   内测包产物（可删）
+├── tests/                  287 + 40 项验收测试 + 样例 profile
+├── ref/                    SimC 源码参考：去上游哪个文件看（不存源码副本）
+└── dist/                   内测包产物（不入库，可重新打包）
 ```
 
 ## 游戏内插件：补齐「天赋给了多少」
@@ -268,7 +296,7 @@ simc 文本 → 装备对象 → alloc 万分比 → 单件数值 → 全身合�
   要走通得先解决效果数据从哪来——wowhead 的 spell 接口给不出 aura 108 的数值，
   DBC 的 `EffectPointsMin` 全是 0。绕一圈可能又回到"用面板反推"这个已有答案。
 - **专精精通系数只验证了 2 个**。40 个专精里只有兽王/射击用真实面板核过，见
-  `专精精通系数表.md`。其中织雾武僧 `31.185` 明显是错的量级（同一条法术里还有 `0.31185`，
+  `docs/专精精通系数表.md`。其中织雾武僧 `31.185` 明显是错的量级（同一条法术里还有 `0.31185`，
   差 100 倍），得拿武僧实际面板定夺。
 - **副本与 BOSS 名还是英文**。装备/宝石/附魔的中文名都补上了，但来源行还是
   `The Venomous Abyss · Nek'zali the Soulcoiler`，要中文化得另做映射。

@@ -35,8 +35,9 @@ from wowgear import accounts                             # noqa: E402
 sys.stdout.reconfigure(encoding="utf-8")
 
 from wowgear.paths import DB_PATH, ICONS as ICON_DIR, ROOT, TESTS, WEB as WEB_DIR
-SAMPLE_PROFILE = os.path.join(TESTS, "my_profile.txt")      # 真实导出，不入库
-SAMPLE_FALLBACK = os.path.join(TESTS, "sample_profile.txt")  # 入库的构造样例
+SAMPLE_PROFILE = os.path.join(TESTS, "my_profile.txt")       # 本机真实导出，不入库
+SAMPLE_DEMO = os.path.join(TESTS, "demo_profile.txt")         # 同一份的脱敏版，入库
+SAMPLE_FALLBACK = os.path.join(TESTS, "sample_profile.txt")   # 构造样例（含故意缺的装备）
 PORT = 8765
 COOKIE = "wg_sid"            # 登录令牌
 ANON = "wg_aid"              # 未登录浏览器的身份，用来隔离各自的会话
@@ -184,13 +185,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._send(200, s.snapshot())
 
         if u.path == "/api/sample":
-            # my_profile.txt 是真实角色导出（含角色名/服务器），不进版本库；
-            # 别人 clone 下来没有这个文件，用构造样例顶上。
-            for path in (SAMPLE_PROFILE, SAMPLE_FALLBACK):
+            # my_profile.txt 是本机真实导出（含角色名/服务器），不进版本库。
+            # 别人 clone 下来先用 demo_profile.txt——同一份数据，只是名字换成了 Demo；
+            # 再没有才退到构造样例（那份故意塞了几件库里不存在的装备，用来测容错）。
+            for path in (SAMPLE_PROFILE, SAMPLE_DEMO, SAMPLE_FALLBACK):
                 if os.path.exists(path):
                     with open(path, encoding="utf-8") as f:
                         return self._send(200, {"simc": f.read(),
-                                                "real": path is SAMPLE_PROFILE})
+                                                "real": path != SAMPLE_FALLBACK})
             return self._send(404, {"error": "样例文件不存在"})
 
         if u.path == "/api/export-simc":

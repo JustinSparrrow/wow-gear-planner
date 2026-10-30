@@ -222,7 +222,7 @@ def parse_item(slot, raw, warnings, comment_name="", comment_ilevel=None):
         ilevel=ilvl,
         bonus_ids=merged_ints("bonus_id"),
         # gem_id 是**按孔位排列**的，0 表示这个孔是空的（SimC 自己也是这么导的：
-        # ref/item.cpp 里 `range::fill(gem_id, 0)` 之后照样把 0 写进 gem_id=）。
+        # engine/item/item.cpp 里 `range::fill(gem_id, 0)` 之后照样把 0 写进 gem_id=）。
         # 早先这里把 0 直接丢掉，于是 `gem_id=0/240983` 会被读成"第 1 孔有宝石"，
         # 宝石位置整个前移一格。末尾的空孔仍然裁掉，不然每件都拖一串 0。
         gem_ids=_trim_gems(merged_ints("gem_id")),

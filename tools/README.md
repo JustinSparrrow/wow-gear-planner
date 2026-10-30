@@ -25,7 +25,8 @@
 | `data/accounts.db` | 你的账号、历史、配装存档 |
 | `data/panel.json` / `player_crafted.json` | 你的面板校准和自选属性，会让别人的角色算歪 |
 | `data/raw/`（57MB） | 只有 `--build` 重建库才用，运行时不需要 |
-| `tests/my_profile.txt` | 你的真实角色导出（含角色名和服务器） |
+| `tests/my_profile.txt` | 本机真实角色导出（含角色名和服务器，不入库） |
+| `tests/demo_profile.txt` | 同一份的脱敏版，**入库**，别人 clone 后用它 |
 | `src/build/` `tools/` `ref/` | 开发期的东西 |
 
 带的是运行界面真正需要的那部分：`main.py`、`src/`（前端+服务端+两个运行库）、

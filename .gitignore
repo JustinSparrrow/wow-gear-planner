@@ -9,10 +9,14 @@ venv/
 .idea/
 .vscode/
 
-# 生成物：可由 build_db.py / fetch_icons.py 重建，不入库
-data/wowgear.db
+# SQLite 的临时文件
 data/wowgear.db-wal
 data/wowgear.db-shm
+
+# `data/wowgear.db` 特意入库（5MB）。它是构建产物，但要重建得先拉 61MB 静态数据、
+# 再跑 build_db，别人 clone 下来只是想试一下的话成本太高。
+# 自带一份建好的，`python main.py` 就能跑；数据过期时再 `--update` 重建。
+# 代价是每次 --build 都会改这个文件，提交时注意别看花眼。
 data/icons/
 data/icon_failures.json
 
@@ -46,3 +50,18 @@ tests/my_profile.txt
 
 # 打包产物（tools/package_beta.py 生成）
 dist/
+
+# WorkBuddy 的工作区：开发日志、截图探针、临时脚本。
+# 只在本机用，留着是给自己看的，推上去对别人没有意义
+.workbuddy/
+
+# 玩家自己填的游戏面板和自选属性。程序生成、每人不同，
+# 推上去等于把别人的角色数据带上（评级、耐力这些）
+data/panel.json
+data/player_crafted.json
+
+# SimC 的源码片段。留着是为了本地查公式方便，但那是 GPL-3.0 的代码，
+# 整份复制进仓库会让许可变得麻烦。要看的人照 ref/README.md 去上游拿
+ref/*.cpp
+ref/*.hh
+ref/*.hpp

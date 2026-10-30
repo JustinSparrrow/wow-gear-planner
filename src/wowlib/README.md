@@ -102,7 +102,7 @@ session.stat_pct("haste", 1584)   # -> 36.0 上下
 - `stat_bonuses()` 需要 `effects` 参数，目前没有调用方
 - `session.py` 没有 `import talents`
 
-原因和后续判断写在 `技术路线.md` 的「已知边界」第 1 条。简单说：能解出来，但算不出
+原因和后续判断写在 `docs/技术路线.md` 的「已知边界」第 1 条。简单说：能解出来，但算不出
 每个天赋给多少属性，而效果数据很难抓（wowhead 给不出 aura 108 的数值）。
 现在这部分由 `panel.json` 兜住。
 

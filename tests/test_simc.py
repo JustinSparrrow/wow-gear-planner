@@ -26,8 +26,12 @@ from wowlib.simc import parse, resolve, class_primary, normalize_stats  # noqa: 
 
 DB_PATH = os.path.join(ROOT, "data", "wowgear.db")
 SAMPLE = os.path.join(HERE, "sample_profile.txt")   # 人工构造的战士样例
-_real = os.path.join(HERE, "my_profile.txt")        # 插件真实导出（不入库）
-REAL = _real if os.path.exists(_real) else SAMPLE     # 没有就退回构造样例
+DEMO = os.path.join(HERE, "demo_profile.txt")       # 真实导出的脱敏版（入库）
+_real = os.path.join(HERE, "my_profile.txt")        # 本机真实导出（不入库）
+# 真实导出优先，没有就用入库的脱敏版——两者是同一套猎人的装备。
+# **不能降级到战士样例**：group_real / group_tiers 里几十条断言都写死了猎人那几件
+# 装备和那几个专精，喂一份战士导出会在这里炸掉，报出来的错跟真正的 bug 分不清。
+REAL = _real if os.path.exists(_real) else DEMO
 
 results = []   # (组名, 用例名, [(字段, 期望, 实际), ...])
 
@@ -254,10 +258,13 @@ def group_real():
 
     by_slot = {r["item"].slot: r for r in rows}
 
+    # 角色名来自第一行注释（`# 名字 - 专精 - 时间 - 区服`）。样例有两种：
+    # 本机真实导出用真名，入库的脱敏版叫 Demo——两者内容一样，名字按文件判
+    want_name = "Demo" if os.path.abspath(REAL) == os.path.abspath(DEMO) else "尛柒誒"
     check("真实导出", "整体", [
         ("职业", "hunter", p.class_key),
         ("专精", "beast_mastery", p.spec),
-        ("角色名取自注释", "尛柒誒", p.char_name),
+        ("角色名取自注释", want_name, p.char_name),
         ("战袍不计入装备数", 15, len(rows)),
         ("全部命中数据库", 15, summary["found"]),
         ("没有任何告警", [], [f for r in rows for f in r["flags"]]),
@@ -1216,6 +1223,10 @@ def main():
         return 2
     if not os.path.exists(SAMPLE):
         print(f"找不到样例文件 {SAMPLE}")
+        return 2
+    if not os.path.exists(REAL):
+        print(f"找不到样例文件 {REAL}\n"
+              f"仓库里本该带一份 {os.path.basename(DEMO)}，检查是不是被删了")
         return 2
 
     group_parse()

@@ -633,7 +633,7 @@ class Session:
         孔是**位置**不是**数量**：`gem_ids` 按槽位对齐，空孔用 0 占位。
         以前拔掉第 1 颗会用 pop 把数组压紧，第 2 颗就顶到第 1 个孔上去了——
         数值没错，但界面上宝石"跳"了一个孔，导出的 simc 也把位置写错了。
-        SimC 自己就是用 0 表示空孔的（ref/item.cpp 里 `range::fill(gem_id, 0)`
+        SimC 自己就是用 0 表示空孔的（engine/item/item.cpp 里 `range::fill(gem_id, 0)`
         之后照样把 0 写进 gem_id=），所以 0 占位是格式允许的写法。
         """
         if it is None:

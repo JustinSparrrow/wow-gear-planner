@@ -2,7 +2,7 @@
 
 用法
 ----
-    python main.py                  交互式（默认，用 tests/my_profile.txt）
+    python main.py                  交互式（默认载入 tests/demo_profile.txt）
     python main.py 你的导出.txt      交互式，载入指定 simc 导出
     python main.py --web            启动网页界面
     python main.py --test           跑测试
@@ -36,7 +36,11 @@ from wowlib.session import Session, load_choices, save_choices, connect, CHOICE_
 sys.stdout.reconfigure(encoding="utf-8")
 
 DB_PATH = os.path.join(HERE, "data", "wowgear.db")
-DEFAULT_PROFILE = os.path.join(HERE, "tests", "my_profile.txt")
+# 样例导出。本机真实导出优先（`my_profile.txt` 不入库，里面有角色名和服务器），
+# 仓库里自带的是 `demo_profile.txt`——同一份数据，只是名字/服务器换成了 Demo/Example。
+MY_PROFILE = os.path.join(HERE, "tests", "my_profile.txt")
+DEMO_PROFILE = os.path.join(HERE, "tests", "demo_profile.txt")
+DEFAULT_PROFILE = MY_PROFILE
 
 STAT_CN = {"agi": "敏捷", "str": "力量", "int": "智力", "sta": "耐力",
            "crit": "暴击", "haste": "急速", "mastery": "精通", "vers": "全能"}
@@ -304,10 +308,23 @@ def do_lookup(session):
     print(LINE)
 
 
+def sample_profile():
+    """默认用哪个样例导出。
+
+    本机真实导出优先——那是真数据，装等和宝石都对得上；
+    仓库克隆下来的人没有它（含角色名，不入库），退回 `demo_profile.txt`，
+    同一份内容只是名字换成了 Demo，界面效果一样。
+    """
+    for cand in (MY_PROFILE, DEMO_PROFILE):
+        if os.path.exists(cand):
+            return cand
+    return DEMO_PROFILE
+
+
 def do_tiers(session):
     out = subprocess.run(
         [sys.executable, os.path.join(HERE, "src", "build", "tiers.py"),
-         "--profile", DEFAULT_PROFILE],
+         "--profile", sample_profile()],
         capture_output=True, text=True, encoding="utf-8",
     )
     print(out.stdout or out.stderr)
@@ -437,8 +454,8 @@ def start_interactive(profile_path):
         print("找不到数据库，先跑 python main.py build")
         return 1
     if not profile_path:
-        print("没有指定 simc 导出，用样例：" + os.path.relpath(DEFAULT_PROFILE, HERE))
-        profile_path = DEFAULT_PROFILE
+        profile_path = sample_profile()
+        print("没有指定 simc 导出，用样例：" + os.path.relpath(profile_path, HERE))
     if not os.path.exists(profile_path):
         print(f"找不到 {profile_path}")
         return 1
@@ -601,7 +618,7 @@ def main(argv=None):
         description="魔兽世界配装规划器",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__)
-    ap.add_argument("profile", nargs="?", help="simc 导出文件，不填就用 tests/my_profile.txt")
+    ap.add_argument("profile", nargs="?", help="simc 导出文件，不填就用 tests/demo_profile.txt")
     ap.add_argument("--web", action="store_true", help="启动网页界面")
     ap.add_argument("--test", action="store_true", help="跑测试")
     ap.add_argument("--build", action="store_true", help="重建数据库")

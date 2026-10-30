@@ -1,3 +1,0 @@
-﻿全部节点: 选中 85 个，hero 29 个 -> ['Stargazer', 'Better Together', 'Lunar Calling', 'Stampede!', 'Shell Cover', 'No Mercy']
-只留 255 可用: 选中 51 个，hero 20 个 -> ['Better Together', 'No Mercy', 'Arcane Talons', 'Invigorating Pulse', 'Ursine Fury', 'Sentinel']
-去掉 hero 树: 选中 35 个，hero 0 个 -> []
