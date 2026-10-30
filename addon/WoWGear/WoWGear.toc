@@ -1,7 +1,26 @@
 ## Interface: 120105
-## Title: WoWGear 数据导出
-## Notes: 一键导出当前角色的评级与百分比，粘到配装规划器里
-## Version: 0.2.0
+## Title: WoWGear 配装模拟
+## Notes: 在游戏内扫描身上和背包的装备，模拟换装后四项绿字会变成多少
+## Version: 1.0.0
 ## Author: JustinSparrrow
-## X-Category: Other
+## SavedVariables: WoWGearDB
+## X-Category: Inventory
+## X-Website: https://github.com/JustinSparrrow/wow-gear-planner
+
+# 加载顺序有依赖，不要调换：
+#   Data  静态表（槽位/曲线/专精系数）
+#   Util  格式化 + 物品读取缓存（依赖 Data 的 MOD 表）
+#   Gear  采集（依赖 Util.Item）
+#   Calc  计算（依赖 Data 的曲线 + Gear 的槽位序）
+#   UI    主窗口（依赖 Calc）
+#   List  两个列表（依赖 UI 的 frame）
+#   Export 导出子窗口（依赖 UI.button/skin）
+#   Core  事件与命令（放最后，前面都定义好了才能接事件）
+Data.lua
+Util.lua
+Gear.lua
+Calc.lua
+UI.lua
+List.lua
+Export.lua
 Core.lua
